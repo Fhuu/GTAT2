@@ -34,8 +34,14 @@ var startButton;
 //VARIABLE NEEDED FOR DYNAMIC MOVEMENT
 var angleLeft, angleRight; //ANGLE FOR WIPPE
 var leftVisibility, rightVisibility; //VISIBILITY OF DRAG CIRCLE
+var leftStartY, rightStartY;
 var leftControl, rightControl; //POSITION OF DRAG CIRCLE
 var rightBallMovement, leftBallMovement; //FOR BALL MOVEMENT
+
+//=====================PHYSICS VARIABLE=========================//
+var changedTime;
+var elasticityKonstant;
+
 
 function setup() {
     canvas = createCanvas(windowWidth, windowHeight);
@@ -61,12 +67,20 @@ function setup() {
     //DEFAULT VISIBILITY OF DRAG CIRCLE ARE TRUE(THEY SHOULD BE VISIBLE)
     leftVisibility = true;
     rightVisibility = true;
+    leftStartY = Math.tan(-angleLeft * Math.PI / 180) * 125/ ratioY * ratioX;
+    rightStartY = Math.tan(-angleRight * Math.PI / 180) * 125/ ratioY * ratioX;
     //THE DEFAULT POSITION OF DRAG CIRCLE, IT TAKES THE ANGLE IN CONSIDERATION FOR THE STARTING POINT
-    leftControl = createVector(-125, ((Math.tan(-angleLeft) * (125 * ratioY))));
-    rightControl = createVector(125, ((Math.tan(-angleRight) * (125 * ratioY))));
+    leftControl = createVector(-125, leftStartY);
+    rightControl = createVector(125, rightStartY);
     //DEFAULT BALL MOVEMENT IS SET TO 0, THEY ARE NOT MOVING AT ALL IN INITIAL STATE
     leftBallMovement = createVector(0, 0);
     rightBallMovement = createVector(0, 0);    
+
+
+    //=======PHYSICS SETUP========//
+    changedTime = 0;
+    elasticityKonstant = 2;
+    //lets say ball's mass is 1
 }
 
 
@@ -82,6 +96,7 @@ function setup() {
  * 5. drag circle relative to seesaw rect
  */
 function draw() {
+
     background('#aaaaff');
     
     //******* Darstellung **** Hier wird in Pixeln gerechnet! **********************
@@ -93,6 +108,23 @@ function draw() {
     //****************************************** Administration ********************************************
     //WHEN START BUTTON IS PRESSED, RESET()
     startButton.mousePressed(() => reset());
+    
+
+    //=================================Physics====================================//
+    //Potential energie of the spring Ep = (1/2)*elasticityConstant*deltaPosition²
+    
+    checkLimit();
+    let ep = elasticityKonstant * Math.pow(dist(0, leftControl.y, 0, leftStartY), 2);
+    //If mass of ball is 1, then the starting velocity of the ball is:
+    let leftV0 = Math.sqrt(ep * 2);
+    // leftControl.y -= leftV0 * Math.cos(20 * Math.PI / 180) * deltaTime / 1000; 
+    console.log(Math.atan(leftControl.y / 125) * 180/Math.PI);
+    changedTime += deltaTime;
+    if(changedTime >= 1000) {
+        console.log(changedTime);
+        changedTime = 0;
+    }
+    
     
     push();
     fill(0);
@@ -244,7 +276,6 @@ function draw() {
 
     //IS MOUSE OVER DRAG CIRCLE OBJECT
     isMouseOver();
-    
 }
 
 //CHECK IF THE DRAG SHOULD BE VISIBLE,
@@ -252,12 +283,13 @@ function draw() {
 //WHICH MEANS THE CIRCLE CAN BE DRAGGED
 function mouseDragged() {
     if(!leftVisibility) {
-        leftControl.y = (mouseY - centerY) / ratioY + 125 - 75;
-        angleLeft = -Math.atan((leftControl.y * ratioY) / (125 * ratioX)) * (180/Math.PI);
+        leftControl.y = (mouseY - centerY) / ratioY * ratioX + 125 - 75;
+        angleLeft = -Math.atan((leftControl.y * ratioY) / (125 * ratioX)) * (180/Math.PI);        
     }
+
     if(!rightVisibility) {
-        rightControl.y = (mouseY - centerY) / ratioY + 125 - 75;
-        angleRight = -Math.atan((rightControl.y * ratioY) / (125 * ratioX)) * (180/Math.PI);
+        rightControl.y = (mouseY - centerY) / ratioY * ratioX + 125 - 75;
+        angleRight = -Math.atan((rightControl.y * ratioY) / (125 * ratioX)) * (180/Math.PI);    
     }
 }
 
@@ -277,12 +309,36 @@ var isMouseOver = () => {
     }
 }
 
+var checkLimit = () => {
+    //LEFT
+    if(angleLeft > 20) {
+        angleLeft = 20;
+        leftControl.y = Math.tan(-angleLeft * Math.PI / 180) * 125 / ratioY * ratioX;
+    }
+    if(angleLeft < -20) {
+        angleLeft = -20;
+        leftControl.y = Math.tan(-angleLeft * Math.PI / 180) * 125 / ratioY * ratioX;
+    }
+    leftControl.x = -Math.sqrt(Math.pow(125, 2) - Math.pow(leftControl.y * ratioY, 2));
+
+    //RIGHT
+    if(angleRight > 20) {
+        angleRight = 20;
+        rightControl.y = Math.tan(-angleRight * Math.PI / 180) * 125 / ratioY * ratioX;
+    }
+    if(angleRight < -20) {
+        angleRight = -20;
+        rightControl.y = Math.tan(-angleRight * Math.PI / 180) * 125 / ratioY * ratioX;
+    }
+    rightControl.x = Math.sqrt(Math.pow(125, 2) - Math.pow(rightControl.y * ratioY, 2));
+}
+
 //RESET THE SCENE BACK TO DEFAULT
 var reset = () => {
     angleLeft = 20;
     angleRight = 20;
-    leftControl = createVector(-125,((Math.tan(-angleLeft) * (125 * ratioY))));
-    rightControl = createVector(125,((Math.tan(-angleRight) * (125 * ratioY))));
+    leftControl = createVector(-125,Math.tan(-angleLeft * Math.PI / 180) * 125 / ratioY * ratioX);
+    rightControl = createVector(125,Math.tan(-angleRight * Math.PI / 180) * 125 / ratioY * ratioX);
     leftBallMovement = createVector(0,0);
     rightBallMovement = createVector(0,0);
 }
