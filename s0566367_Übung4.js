@@ -21,8 +21,8 @@
 var t = 0;                        // Zeit
 var dt;                           // Zeitquant - wird auf die Bildwechselrate bezogen 
 var frmRate;                      // Fliesskommadarstellung für Kehrwertbildung notwendig!
-var ratioX;     //ratio von Pixel pro 2mm in X
-var ratioY;     //ratio von Pixel pro 2mm in Y
+var rX;     //ratio von Pixel pro 2mm in X
+var rY;     //ratio von Pixel pro 2mm in Y
 var centerX;    //0 Punkt des Kartesisches Systems in X Achse
 var centerY;    //0 Punk des Kartesisches Systems in Y Achse
 
@@ -33,7 +33,12 @@ var startButton;
 
 //VARIABLE NEEDED FOR DYNAMIC MOVEMENT
 var triHeight;
+var maxAlpha;
 var angleLeft, angleRight; //ANGLE FOR WIPPE
+
+//BALL VARIABLE
+var leftBallStartPoint;
+
 var leftVisibility, rightVisibility; //VISIBILITY OF DRAG CIRCLE
 var leftStartY, rightStartY;
 var leftControl, rightControl; //POSITION OF DRAG CIRCLE
@@ -50,8 +55,8 @@ function setup() {
     canvas = createCanvas(windowWidth, windowHeight);
     canvas.parent(canvasID);
     
-    ratioX = windowWidth / 2000;
-    ratioY = -windowHeight / 2000;  //To invert the - to bottom and + to top need to add - for the ratio
+    rX = windowWidth / 2000;
+    rY = -rX;  //To invert the - to bottom and + to top need to add - for the ratio
 
     centerX = windowWidth / 2;
     centerY = windowHeight - (0.2 * windowHeight);
@@ -65,10 +70,15 @@ function setup() {
     startButton.size(200);
 
     //HEIGHT OF SUPPORT TRIANGLE IS 50
-    triHeight = 50;
-    let maxAlpha = Math.asin(triHeight * ratioY / (125 * ratioX));
+    //ANGLE CALCULATION
+    triHeight = 46;
+    maxAlpha = Math.asin((triHeight * rX) / (-125 * rY));
     angleLeft = maxAlpha;
     angleRight = maxAlpha;
+
+    //BALL VARIABLE
+    leftBallStartPoint = createVector(-725 * Math.cos(angleLeft) + 16 * Math.cos(90 * Math.PI/180 - angleLeft), Math.sin(angleLeft) * 250);
+
     //DEFAULT VISIBILITY OF DRAG CIRCLE ARE TRUE(THEY SHOULD BE VISIBLE)
     leftVisibility = true;
     rightVisibility = true;
@@ -120,11 +130,6 @@ function draw() {
     //Potential energie of the spring Ep = (1/2)*elasticityConstant*deltaPosition²
     
     checkLimit();
-    changedTime += deltaTime;
-    if(changedTime >= 1000) {
-        console.log(changedTime);
-        changedTime = 0;
-    }
     
     
     push();
@@ -143,29 +148,40 @@ function draw() {
 
         translate(centerX, centerY);
         fill(color(255,0,0));
-        circle(0,0, 32 * ratioX);
+        circle(0,0, 32 * rY);
 
         //FLOOR
-        line(-centerX, -32 * ratioY, centerX, -32 * ratioY);
+        line(-centerX, -16 * rY, centerX, -16 * rY);
 
         //LEFT SYSTEM
         push();
             fill(color(0,0,0));
-            triangle(-600 * ratioX, 50 * ratioY, -630 * ratioX, -32 * ratioY, -570 * ratioX, -32 * ratioY);
+            triangle(-600 * rX, 30 * rY, -630 * rX, -16 * rY, -570 * rX, -16 * rY);
         pop();
 
         push();
-            translate(-600 * ratioX, 50 * ratioY);
-            
-            rotate(-angleLeft);
-            line(-125 * ratioX, 0, 125 * ratioX, 0);
+            translate(-600 * rX, 30 * rY);
+            rotate(angleLeft);
+            line(-125 * rX, 0, 125 * rX, 0);
             fill(color(0,0,0));
-            triangle(-80 * ratioX, 30 * ratioY, -90 * ratioX, 0, -70 * ratioX, 0);
+            triangle(-60 * rX, 25 * rY, -68 * rX, 0, -52 * rX, 0);
         pop();
 
-    pop();
+        //LEFT BALL
+        push();
+            fill(color(0,255,0));
+            translate((leftBallStartPoint.x + leftBallMovement.x) * rX, (leftBallStartPoint.y - 16 + leftBallMovement.y) * rY);
+            circle(0, 0, 32 * rX);
+        pop();
 
-    
+        // line(
+        //     (-600 - 125 + Math.cos(angleLeft) * 16) * rX, 
+        //     (ballStartPoint - 16) * rY, 
+        //     Math.cos(angleLeft) * 16 * rX, 
+        //     0
+        // );
+    pop();    
+    changedTime += deltaTime / 1000;
 }
 
 //CHECK IF THE DRAG SHOULD BE VISIBLE,
@@ -173,16 +189,16 @@ function draw() {
 //WHICH MEANS THE CIRCLE CAN BE DRAGGED
 function mouseDragged() {
     if(!leftVisibility) {
-        leftControl.y = (mouseY - centerY) / ratioY * ratioX + 125 - 75;
-        angleLeft = -Math.atan((leftControl.y * ratioY) / (125 * ratioX)) * (180/Math.PI);
+        leftControl.y = (mouseY - centerY) / rY * rX + 125 - 75;
+        angleLeft = -Math.atan((leftControl.y * rY) / (125 * rX)) * (180/Math.PI);
         let epLeft = elasticityKonstant * Math.pow(dist(0, leftControl.y, 0, leftStartY), 2);
         //If mass of ball is 1, then the starting velocity of the ball is:
         leftV0 = Math.sqrt(epLeft * 2);        
     }
 
     if(!rightVisibility) {
-        rightControl.y = (mouseY - centerY) / ratioY * ratioX + 125 - 75;
-        angleRight = -Math.atan((rightControl.y * ratioY) / (125 * ratioX)) * (180/Math.PI);    
+        rightControl.y = (mouseY - centerY) / rY * rX + 125 - 75;
+        angleRight = -Math.atan((rightControl.y * rY) / (125 * rX)) * (180/Math.PI);    
         let epRight = elasticityKonstant * Math.pow(dist(0, rightControl.y, 0, rightStartY), 2);
         rightV0 = Math.sqrt(epRight * 2);
     }
@@ -190,8 +206,8 @@ function mouseDragged() {
 
 //WHETHER THE MOUSE IS OVER DRAG CIRCLE OR NOT
 var isMouseOver = () => {
-    let dLeft = dist((-600 + leftControl.x) * ratioX, centerY + (75 - 125 + leftControl.y) * ratioY, (mouseX - centerX), mouseY);
-    let dRight = dist((600 + rightControl.x) * ratioX, centerY + (75 - 125 + rightControl.y) * ratioY, (mouseX - centerX), mouseY);
+    let dLeft = dist((-600 + leftControl.x) * rX, centerY + (75 - 125 + leftControl.y) * rY, (mouseX - centerX), mouseY);
+    let dRight = dist((600 + rightControl.x) * rX, centerY + (75 - 125 + rightControl.y) * rY, (mouseX - centerX), mouseY);
     if(dLeft < 32) {
         leftVisibility = false;
     } else {
@@ -208,47 +224,47 @@ var physicsMovement = () => {
     let time = deltaTime / 1000;
     if(leftVisibility) {
         leftControl.y -= (leftV0 * Math.sin(20 * Math.PI / 180) * time);
-        angleLeft = -Math.atan((leftControl.y * ratioY) / (125 * ratioX)) * (180/Math.PI);
+        angleLeft = -Math.atan((leftControl.y * rY) / (125 * rX)) * (180/Math.PI);
         leftV0 -= 9.8 * time * time;
         leftBallMovement.y += leftV0 * Math.sin(20 * Math.PI / 180) * time;
         console.log(leftV0)
     }    
     if(rightVisibility) {
         rightControl.y -= (rightV0 * Math.sin(20 * Math.PI / 180) * time);
-        angleRight = -Math.atan((rightControl.y * ratioY) / (125 * ratioX)) * (180/Math.PI);
+        angleRight = -Math.atan((rightControl.y * rY) / (125 * rX)) * (180/Math.PI);
     }
 }
 
 var checkLimit = () => {
     //LEFT
-    if(angleLeft > 20) {
-        angleLeft = 20;
-        leftControl.y = Math.tan(-angleLeft * Math.PI / 180) * 125 / ratioY * ratioX;
+    if(angleLeft > maxAlpha) {
+        angleLeft = maxAlpha;
+        leftControl.y = Math.tan(-angleLeft * Math.PI / 180) * 125 / rY * rX;
     }
-    if(angleLeft < -20) {
-        angleLeft = -20;
-        leftControl.y = Math.tan(-angleLeft * Math.PI / 180) * 125 / ratioY * ratioX;
+    if(angleLeft < -maxAlpha) {
+        angleLeft = -maxAlpha;
+        leftControl.y = Math.tan(-angleLeft * Math.PI / 180) * 125 / rY * rX;
     }
-    leftControl.x = -Math.sqrt(Math.pow(125, 2) - Math.pow(leftControl.y * ratioY, 2));
+    leftControl.x = -Math.sqrt(Math.pow(125, 2) - Math.pow(leftControl.y * rY, 2));
 
     //RIGHT
-    if(angleRight > 20) {
-        angleRight = 20;
-        rightControl.y = Math.tan(-angleRight * Math.PI / 180) * 125 / ratioY * ratioX;
+    if(angleRight > maxAlpha) {
+        angleRight = maxAlpha;
+        rightControl.y = Math.tan(-angleRight * Math.PI / 180) * 125 / rY * rX;
     }
-    if(angleRight < -20) {
-        angleRight = -20;
-        rightControl.y = Math.tan(-angleRight * Math.PI / 180) * 125 / ratioY * ratioX;
+    if(angleRight < -maxAlpha) {
+        angleRight = -maxAlpha;
+        rightControl.y = Math.tan(-angleRight * Math.PI / 180) * 125 / rY * rX;
     }
-    rightControl.x = Math.sqrt(Math.pow(125, 2) - Math.pow(rightControl.y * ratioY, 2));
+    rightControl.x = Math.sqrt(Math.pow(125, 2) - Math.pow(rightControl.y * rY, 2));
 }
 
 //RESET THE SCENE BACK TO DEFAULT
 var reset = () => {
     angleLeft = 20;
     angleRight = 20;
-    leftControl = createVector(-125,Math.tan(-angleLeft * Math.PI / 180) * 125 / ratioY * ratioX);
-    rightControl = createVector(125,Math.tan(-angleRight * Math.PI / 180) * 125 / ratioY * ratioX);
+    leftControl = createVector(-125,Math.tan(-angleLeft * Math.PI / 180) * 125 / rY * rX);
+    rightControl = createVector(125,Math.tan(-angleRight * Math.PI / 180) * 125 / rY * rX);
     leftBallMovement = createVector(0,0);
     rightBallMovement = createVector(0,0);
 }
