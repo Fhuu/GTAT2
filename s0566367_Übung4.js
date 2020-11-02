@@ -32,6 +32,7 @@ var canvasID = 'pTest'; // ist eine Variable!!!
 var startButton;
 
 //VARIABLE NEEDED FOR DYNAMIC MOVEMENT
+var triHeight;
 var angleLeft, angleRight; //ANGLE FOR WIPPE
 var leftVisibility, rightVisibility; //VISIBILITY OF DRAG CIRCLE
 var leftStartY, rightStartY;
@@ -43,13 +44,14 @@ var changedTime;
 var elasticityKonstant;
 var leftV0, rightV0;
 
+var movingAngle;
 
 function setup() {
     canvas = createCanvas(windowWidth, windowHeight);
     canvas.parent(canvasID);
     
     ratioX = windowWidth / 2000;
-    ratioY = windowHeight / 2000;
+    ratioY = -windowHeight / 2000;  //To invert the - to bottom and + to top need to add - for the ratio
 
     centerX = windowWidth / 2;
     centerY = windowHeight - (0.2 * windowHeight);
@@ -62,14 +64,14 @@ function setup() {
     startButton.position(100, 30);
     startButton.size(200);
 
-    //DEFAULT, ANGLE ARE 20
-    angleLeft = 20;
-    angleRight = 20;
+    //HEIGHT OF SUPPORT TRIANGLE IS 50
+    triHeight = 50;
+    let maxAlpha = Math.asin(triHeight * ratioY / (125 * ratioX));
+    angleLeft = maxAlpha;
+    angleRight = maxAlpha;
     //DEFAULT VISIBILITY OF DRAG CIRCLE ARE TRUE(THEY SHOULD BE VISIBLE)
     leftVisibility = true;
     rightVisibility = true;
-    leftStartY = Math.tan(-angleLeft * Math.PI / 180) * 125/ ratioY * ratioX;
-    rightStartY = Math.tan(-angleRight * Math.PI / 180) * 125/ ratioY * ratioX;
     //THE DEFAULT POSITION OF DRAG CIRCLE, IT TAKES THE ANGLE IN CONSIDERATION FOR THE STARTING POINT
     leftControl = createVector(-125, leftStartY);
     rightControl = createVector(125, rightStartY);
@@ -80,10 +82,11 @@ function setup() {
 
     //=======PHYSICS SETUP========//
     changedTime = 0;
-    elasticityKonstant = 2;
+    elasticityKonstant = 1;
     //lets say ball's mass is 1
     leftV0 = 0;
     rightV0 = 0;
+    movingAngle = 0;
 }
 
 
@@ -130,151 +133,39 @@ function draw() {
     text("Diro Baloska S0566367 24.10.2020", 400, 50);
     pop();
 
+
+    //==========================================GRAPHIC===============================================//
+    
+    /**
+     * Create self defined (0,0) coordinate system, this is where the middle ball is positioned
+     */
     push();
 
-        //=================FLOOR===============//
-        rectMode(CENTER);
-        fill(color('#000000'));
-        translate(centerX, centerY + 75 * ratioY);
-        rect(0,0,windowWidth, 50 * ratioY);
-        noStroke();
-        //===============SCORE BOX============//
-        //#region (scorebox) RELATIVE TO FLOOR
+        translate(centerX, centerY);
+        fill(color(255,0,0));
+        circle(0,0, 32 * ratioX);
+
+        //FLOOR
+        line(-centerX, -32 * ratioY, centerX, -32 * ratioY);
+
+        //LEFT SYSTEM
         push();
-            rectMode(CENTER);
-            fill(color('#ff0000'));
-            translate(-450 * ratioX, -15 * ratioY);
-            rect(0,0,50  * ratioX, 25 * ratioY);
+            fill(color(0,0,0));
+            triangle(-600 * ratioX, 50 * ratioY, -630 * ratioX, -32 * ratioY, -570 * ratioX, -32 * ratioY);
         pop();
 
         push();
-            rectMode(CENTER);
-            fill(color('#ff0000'));
-            translate(450 * ratioX, -15 * ratioY);
-            rect(0,0,50  * ratioX, 25 * ratioY);
+            translate(-600 * ratioX, 50 * ratioY);
+            
+            rotate(-angleLeft);
+            line(-125 * ratioX, 0, 125 * ratioX, 0);
+            fill(color(0,0,0));
+            triangle(-80 * ratioX, 30 * ratioY, -90 * ratioX, 0, -70 * ratioX, 0);
         pop();
-        //#endregion
-        //====================================//
 
-        //===============MIDDLE BALL=================//
-        //RELATIVE TO FLOOR
-        push();
-        fill(color('#ff0000'));
-        stroke(color('#000000'));
-        circle(0, -25 * ratioY - 16 * ratioX, 32 * ratioX);
-        pop();
-        //==========================================//
-        
-        //===============RIGHT SEESAW BUNDLE=================//
-        push();
-        
-            //#region (RIGHT SUPPORT TRIANGLE) RELATIVE TO FLOOR
-            fill(color(100,180,255));
-            translate(600 * ratioX, -125 * ratioY);
-            triangle(0, 0, -50 * ratioX, 100 * ratioY, 50 * ratioX, 100 * ratioY);
-            //#endregion
-
-            //#region (RIGHT SEESAW) RELATIVE TO FLOOR AND RIGHT SUPPORT TRIANGLE
-            push();
-                rectMode(CENTER);
-                angleMode(DEGREES);
-                rotate(-angleRight);
-                fill(color(100,180,255));
-                rect(0,0,250 * ratioX, 20 * ratioY);
-
-                //#region (RIGHT TOP TRIANGLE) 
-                push();
-                    
-                    //RIGHT TOP TRIANGLE RELATIVE TO FLOOR -> RIGHT SUPPORT TRIANGLE -> RIGHT SEESAW
-                    push(); 
-                        translate(90 * ratioX, -70 * ratioY);
-                        triangle(0,0, 20 * ratioX, 70 * ratioY, -20 * ratioX, 70 * ratioY);
-
-                        //PLAYABLE BALL RELATIVE TO TOP RIGHT TRIANGLE
-                        push();
-                            fill(color(0,255,0));
-                            stroke(color(0,0,0));
-                            translate(-rightBallMovement.x * ratioX, -rightBallMovement.y * ratioY);
-                            circle(28 * ratioX, 28 * ratioY, 32 * ratioX);
-                        pop();
-                    pop();
-                    
-                    //DRAG CIRCLE RELATIVE TO FLOOR -> RIGHT SUPPORT TRIANGLE -> RIGTH SEESAW
-                    fill(color('#00000000'));
-                    if(rightVisibility)
-                        stroke(color(0, 0, 0));
-                    else 
-                        noStroke();
-                    rotate(angleRight);
-                    circle(rightControl.x * ratioX, rightControl.y * ratioY, 64 * ratioX);
-
-                pop();
-                //#endregion
-
-            pop();
-            //#endregion
-
-        pop();
-        //#endregion
-        //============================================//
-
-        //===============LEFT SEESAW BUNDLE=================//
-        //#region (WIPPE BUNDLE LINKS) 
-        push();
-
-            //#region (LEFT SUPPORT TRIANGLE) RELATIVE TO FLOOR
-            fill(color(100,180,255));
-            translate(-600 * ratioX, -125 * ratioY);
-            triangle(0, 0, -50 * ratioX, 100 * ratioY, 50 * ratioX, 100 * ratioY);
-            //#endregion
-
-            //#region (LEFT SEESAW) RELATIVE TO FLOOR AND LINKS DREIECK SUPPORT
-            push();
-                rectMode(CENTER);
-                angleMode(DEGREES);
-                rotate(angleLeft);
-                fill(color(100,180,255));
-                rect(0,0,250 * ratioX, 20 * ratioY);
-
-                //#region (LEFT TOP TRIANGLE) 
-                push();
-
-                    //LEFT TOP TRIANGLE RELATIVE TO FLOOR -> LEFT SUPPORT TRIANGLE -> LEFT SEESAW
-                    push(); 
-                        translate(-90 * ratioX, -70 * ratioY);
-                        triangle(0,0, 20 * ratioX, 70 * ratioY, -20 * ratioX, 70 * ratioY);
-
-                        //PLAYABLE BALL RELATIVE TO LEFT TOP TRIANGLE
-                        push();
-                            fill(color(0,0,255));
-                            stroke(color(0,0,0));
-                            translate(leftBallMovement.x * ratioX, -leftBallMovement.y * ratioY);
-                            circle(-28 * ratioX, 28 * ratioY, 32 * ratioX);
-                        pop();
-                    pop();
-
-                    //DRAG CIRCLE RELATIVE TO FLOOR -> LEFT SUPPORT TRIANGLE -> LEFT SEESAW
-                    fill(color('#00000000'));
-                    if(leftVisibility)
-                        stroke(color(0, 0, 0));
-                    else 
-                        noStroke();
-                    rotate(-angleLeft);
-                    circle(leftControl.x * ratioX, leftControl.y * ratioY, 64 * ratioX);
-
-                pop(); 
-                //#endregion
-
-            pop();
-            //#endregion
-
-        pop();
-        //#endregion
     pop();
 
-    //IS MOUSE OVER DRAG CIRCLE OBJECT
-    isMouseOver();
-    physicsMovement();
+    
 }
 
 //CHECK IF THE DRAG SHOULD BE VISIBLE,
@@ -314,12 +205,16 @@ var isMouseOver = () => {
 }
 
 var physicsMovement = () => {
+    let time = deltaTime / 1000;
     if(leftVisibility) {
-        leftControl.y -= leftV0 * Math.cos(20 * Math.PI / 180) * deltaTime / 1000;
+        leftControl.y -= (leftV0 * Math.sin(20 * Math.PI / 180) * time);
         angleLeft = -Math.atan((leftControl.y * ratioY) / (125 * ratioX)) * (180/Math.PI);
+        leftV0 -= 9.8 * time * time;
+        leftBallMovement.y += leftV0 * Math.sin(20 * Math.PI / 180) * time;
+        console.log(leftV0)
     }    
     if(rightVisibility) {
-        rightControl.y -= rightV0 * Math.cos(20 * Math.PI / 180) * deltaTime / 1000;
+        rightControl.y -= (rightV0 * Math.sin(20 * Math.PI / 180) * time);
         angleRight = -Math.atan((rightControl.y * ratioY) / (125 * ratioX)) * (180/Math.PI);
     }
 }
