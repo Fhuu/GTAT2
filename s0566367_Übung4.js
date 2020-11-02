@@ -41,6 +41,7 @@ var rightBallMovement, leftBallMovement; //FOR BALL MOVEMENT
 //=====================PHYSICS VARIABLE=========================//
 var changedTime;
 var elasticityKonstant;
+var leftV0, rightV0;
 
 
 function setup() {
@@ -81,6 +82,8 @@ function setup() {
     changedTime = 0;
     elasticityKonstant = 2;
     //lets say ball's mass is 1
+    leftV0 = 0;
+    rightV0 = 0;
 }
 
 
@@ -114,11 +117,6 @@ function draw() {
     //Potential energie of the spring Ep = (1/2)*elasticityConstant*deltaPosition²
     
     checkLimit();
-    let ep = elasticityKonstant * Math.pow(dist(0, leftControl.y, 0, leftStartY), 2);
-    //If mass of ball is 1, then the starting velocity of the ball is:
-    let leftV0 = Math.sqrt(ep * 2);
-    // leftControl.y -= leftV0 * Math.cos(20 * Math.PI / 180) * deltaTime / 1000; 
-    console.log(Math.atan(leftControl.y / 125) * 180/Math.PI);
     changedTime += deltaTime;
     if(changedTime >= 1000) {
         console.log(changedTime);
@@ -276,6 +274,7 @@ function draw() {
 
     //IS MOUSE OVER DRAG CIRCLE OBJECT
     isMouseOver();
+    physicsMovement();
 }
 
 //CHECK IF THE DRAG SHOULD BE VISIBLE,
@@ -284,12 +283,17 @@ function draw() {
 function mouseDragged() {
     if(!leftVisibility) {
         leftControl.y = (mouseY - centerY) / ratioY * ratioX + 125 - 75;
-        angleLeft = -Math.atan((leftControl.y * ratioY) / (125 * ratioX)) * (180/Math.PI);        
+        angleLeft = -Math.atan((leftControl.y * ratioY) / (125 * ratioX)) * (180/Math.PI);
+        let epLeft = elasticityKonstant * Math.pow(dist(0, leftControl.y, 0, leftStartY), 2);
+        //If mass of ball is 1, then the starting velocity of the ball is:
+        leftV0 = Math.sqrt(epLeft * 2);        
     }
 
     if(!rightVisibility) {
         rightControl.y = (mouseY - centerY) / ratioY * ratioX + 125 - 75;
         angleRight = -Math.atan((rightControl.y * ratioY) / (125 * ratioX)) * (180/Math.PI);    
+        let epRight = elasticityKonstant * Math.pow(dist(0, rightControl.y, 0, rightStartY), 2);
+        rightV0 = Math.sqrt(epRight * 2);
     }
 }
 
@@ -306,6 +310,17 @@ var isMouseOver = () => {
         rightVisibility = false;
     } else {
         rightVisibility = true;
+    }
+}
+
+var physicsMovement = () => {
+    if(leftVisibility) {
+        leftControl.y -= leftV0 * Math.cos(20 * Math.PI / 180) * deltaTime / 1000;
+        angleLeft = -Math.atan((leftControl.y * ratioY) / (125 * ratioX)) * (180/Math.PI);
+    }    
+    if(rightVisibility) {
+        rightControl.y -= rightV0 * Math.cos(20 * Math.PI / 180) * deltaTime / 1000;
+        angleRight = -Math.atan((rightControl.y * ratioY) / (125 * ratioX)) * (180/Math.PI);
     }
 }
 
