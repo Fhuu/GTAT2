@@ -45,6 +45,8 @@ var leftControl, rightControl; //POSITION OF DRAG CIRCLE
 var rightBallMovement, leftBallMovement; //FOR BALL MOVEMENT
 
 //=====================PHYSICS VARIABLE=========================//
+var gravity;
+
 var changedTime;
 var elasticityKonstant;
 var leftV0, rightV0;
@@ -91,6 +93,8 @@ function setup() {
 
 
     //=======PHYSICS SETUP========//
+    gravity = 9.8;
+
     changedTime = 0;
     elasticityKonstant = 1;
     //lets say ball's mass is 1
@@ -126,10 +130,7 @@ function draw() {
     startButton.mousePressed(() => reset());
     
 
-    //=================================Physics====================================//
-    //Potential energie of the spring Ep = (1/2)*elasticityConstant*deltaPosition²
     
-    checkLimit();
     
     
     push();
@@ -170,7 +171,7 @@ function draw() {
         //LEFT BALL
         push();
             fill(color(0,255,0));
-            translate((leftBallStartPoint.x + leftBallMovement.x) * rX, (leftBallStartPoint.y - 16 + leftBallMovement.y) * rY);
+            translate((leftBallStartPoint.x + leftBallMovement.x) * rX, (leftBallStartPoint.y + centerY - 16 + leftBallMovement.y) * rY);
             circle(0, 0, 32 * rX);
         pop();
 
@@ -181,6 +182,14 @@ function draw() {
         //     0
         // );
     pop();    
+
+    //=================================Physics====================================//
+    //Potential energie of the spring Ep = (1/2)*elasticityConstant*deltaPosition²
+    checkLimit();
+    freeFall();
+
+    //================================Collision==================================//
+    isOnFloor();
     changedTime += deltaTime / 1000;
 }
 
@@ -218,6 +227,21 @@ var isMouseOver = () => {
     } else {
         rightVisibility = true;
     }
+}
+
+var isOnFloor = () => {
+    if(leftBallStartPoint.y + centerY - 16 + leftBallMovement.y < 0) {
+        leftBallMovement.y = -leftBallStartPoint.y - centerY + 16;    
+        changedTime = 0;
+    }
+}
+
+var leftSeesawCollision = () => {
+
+}
+
+var freeFall = () => {
+    leftBallMovement.y -= gravity * changedTime * changedTime;
 }
 
 var physicsMovement = () => {
