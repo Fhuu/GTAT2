@@ -376,7 +376,7 @@ var getVelocity0FromPotentialEnergy = (leftOrRight) => {
         let epLeft = elasticityKonstant * Math.pow(difference, 2);
         //If mass of ball is 1, then the starting velocity of the ball is:
         leftV0fromEP = Math.sqrt(epLeft * 2);
-        leftV0 = createVector(leftV0fromEP * Math.cos(angleLeft), leftV0fromEP * Math.sin(angleLeft));
+        leftV0 = createVector(-leftV0fromEP * Math.sin(angleLeft), -leftV0fromEP * Math.cos(angleLeft));
     } else {
         let rightInitialPosition = createVector((600 + 125 * Math.cos(maxAlpha)) * rX, (30 + 125 * Math.sin(maxAlpha)) * rY);
         let rightActualPosition = createVector((600 + 125 * Math.cos(angleRight)) * rX, (30 + 125 * Math.sin(angleRight)) * rY);
@@ -384,7 +384,7 @@ var getVelocity0FromPotentialEnergy = (leftOrRight) => {
         let epRight = elasticityKonstant * Math.pow(difference, 2);
         //If mass of ball is 1, then the starting velocity of the ball is:
         rightV0fromEP = Math.sqrt(epRight * 2);
-        rightV0 = createVector(rightV0fromEP * Math.cos(angleRight), rightV0fromEP * Math.sin(angleRight));
+        rightV0 = createVector(-rightV0fromEP * Math.sin(angleRight), -rightV0fromEP * Math.cos(angleRight));
     }
 }
 
