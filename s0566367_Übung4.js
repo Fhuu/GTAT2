@@ -40,6 +40,7 @@ var angleLeft, angleRight; //ANGLE FOR WIPPE
 var ballPositionToSeesaw;
 var leftBallStartPoint, rightBallStartPoint;
 
+var leftIsPulled, rightIsPulled;
 var leftVisibility, rightVisibility; //VISIBILITY OF DRAG CIRCLE
 var leftStartY, rightStartY;
 var leftControl, rightControl; //POSITION OF DRAG CIRCLE
@@ -50,7 +51,9 @@ var gravity;
 
 var leftChangedTime, rightChangedTime;
 var elasticityKonstant;
+var leftV0fromEP, rightV0fromEP;
 var leftV0, rightV0;
+var leftShouldLaunch, rightShouldLaunch;
 
 var movingAngle;
 
@@ -83,6 +86,9 @@ function setup() {
     ballPositionToSeesaw = 6.5 / 10;
     leftBallStartPoint = createVector(-600 - 125 * ballPositionToSeesaw * Math.cos(angleLeft), 30 + Math.sin(angleLeft) * 125 * ballPositionToSeesaw);    
     rightBallStartPoint = createVector(600 + 125 * ballPositionToSeesaw * Math.cos(angleRight), 30 + Math.sin(angleRight) * 125 * ballPositionToSeesaw);
+    
+    leftIsPulled = false;
+    rightIsPulled = false;
     //DEFAULT VISIBILITY OF DRAG CIRCLE ARE TRUE(THEY SHOULD BE VISIBLE)
     leftVisibility = true;
     rightVisibility = true;
@@ -97,12 +103,17 @@ function setup() {
     //=======PHYSICS SETUP========//
     gravity = 9.8;
 
-    leftChangedTime = 0;
-    rightChangedTime = 0;
-    elasticityKonstant = 1;
+    leftChangedTime = 1;
+    rightChangedTime = 1;
+    elasticityKonstant = 0.03;
     //lets say ball's mass is 1
-    leftV0 = 0;
-    rightV0 = 0;
+    leftV0fromEP = 0;
+    rightV0fromEP = 0;
+    leftV0 = createVector(0,0);
+    rightV0 = createVector(0,0);
+
+    leftShouldLaunch = true;
+    rightShouldLaunch = true;
     movingAngle = 0;
 }
 
@@ -135,9 +146,7 @@ function draw() {
     //WHEN START BUTTON IS PRESSED, RESET()
     startButton.mousePressed(() => reset());
     isMouseOver();
-    leftBallStartPoint = createVector(-600 - 125 * ballPositionToSeesaw * Math.cos(angleLeft) + 16 * Math.sin(angleLeft), 30 + Math.sin(angleLeft) * 125 * ballPositionToSeesaw + Math.cos(angleLeft) * 16);
-    rightBallStartPoint = createVector(600 + 125 * ballPositionToSeesaw * Math.cos(angleRight) - 16 * Math.sin(angleRight), 30 + Math.sin(angleRight) * 125 * ballPositionToSeesaw + Math.cos(angleRight) * 16);
-
+    changeBallAngle();
     // mouseDragged();
 
     
@@ -223,19 +232,31 @@ function draw() {
             translate((rightBallStartPoint.x + rightBallMovement.x) * rX, (rightBallStartPoint.y + rightBallMovement.y) * rY);
             circle(0, 0, 32 * rX);
         pop();
+
+        //
     pop();    
 
     //=================================Physics====================================//
     //Potential energie of the spring Ep = (1/2)*elasticityConstant*deltaPosition²
     checkLimit();
     freeFall();
+    moveBalls();
 
-    //================================Collision======+============================//
+
+    //================================Collision===================================//
     isOnFloor();
-    leftSeesawCollision();
-    leftChangedTime += deltaTime / 1000;
-    rightChangedTime += deltaTime / 1000;
+    verticalLimit();
     // angleLeft -= 0.01;
+}
+
+
+var changeBallAngle = () => {
+    if(leftBallMovement.x < 125 * rX)
+    leftBallStartPoint = createVector(-600 - 125 * ballPositionToSeesaw * Math.cos(angleLeft) + 16 * Math.sin(angleLeft), 30 + Math.sin(angleLeft) * 125 * ballPositionToSeesaw + Math.cos(angleLeft) * 16);
+    
+    if(rightBallMovement.x > -125 * rX)
+    rightBallStartPoint = createVector(600 + 125 * ballPositionToSeesaw * Math.cos(angleRight) - 16 * Math.sin(angleRight), 30 + Math.sin(angleRight) * 125 * ballPositionToSeesaw + Math.cos(angleRight) * 16);
+    
 }
 
 //CHECK IF THE DRAG SHOULD BE VISIBLE,
@@ -244,16 +265,15 @@ function draw() {
 function mouseDragged() {
     if(!leftVisibility) {
         angleLeft = Math.atan((centerY - 30 - mouseY) * rX / 125);
-        let epLeft = elasticityKonstant * Math.pow(dist(0, leftControl.y, 0, leftStartY), 2);
-        //If mass of ball is 1, then the starting velocity of the ball is:
-        leftV0 = Math.sqrt(epLeft * 2);        
-    }
+        getVelocity0FromPotentialEnergy(true);
+        leftIsPulled = true;
+    } 
 
     if(!rightVisibility) {
         angleRight = Math.atan((centerY - 30 - mouseY) * rX / 125);    
-        let epRight = elasticityKonstant * Math.pow(dist(0, rightControl.y, 0, rightStartY), 2);
-        rightV0 = Math.sqrt(epRight * 2);
-    }
+        getVelocity0FromPotentialEnergy(false);
+        rightIsPulled = true;
+    } 
 }
 
 //WHETHER THE MOUSE IS OVER DRAG CIRCLE OR NOT
@@ -263,6 +283,9 @@ var isMouseOver = () => {
         leftVisibility = false;
     } else {
         leftVisibility = true;
+        if(angleLeft !== maxAlpha) {
+            angleLeft += leftV0fromEP / 125 * rX;
+        }
     }
 
     let dRight = dist(centerX + (600 + 125 * Math.cos(angleRight)) * rX, centerY + (30 + 125 * Math.sin(angleRight))  * rY, mouseX, mouseY);
@@ -270,49 +293,34 @@ var isMouseOver = () => {
         rightVisibility = false;
     } else {
         rightVisibility = true;
+        if(angleRight !== maxAlpha) {
+            angleRight += rightV0fromEP / 125 * rX;
+        }
     }
 }
 
 var isOnFloor = () => {
     if(leftBallStartPoint.y + leftBallMovement.y < 0) {
         leftBallMovement.y = -leftBallStartPoint.y;    
-        leftChangedTime = 0;
+        leftShouldLaunch = false;
     }
     if(rightBallStartPoint.y + rightBallMovement.y < 0) {
-        rightBallMovement.y = -rightBallStartPoint.y;    
-        rightChangedTime = 0;
+        rightBallMovement.y = -rightBallStartPoint.y;
+        rightShouldLaunch = false;
     }
 }
 
-var leftSeesawCollision = () => {
-    leftBallMovement.x += 10;
+var verticalLimit = () => {
+    // leftBallMovement.x += 10;
+    // rightBallMovement.x -= 10;
     // console.log(centerX + 600);
     // console.log(leftBallStartPoint.x + leftBallMovement.x);
-    if(leftBallMovement.x > centerX + 600 && leftBallMovement.y + centerY - 16 + leftBallMovement.y < centerY + 46) {
-        leftBallMovement.x = centerX + 600;
-    }
-}
+    if(leftBallMovement.x > 2 * centerX - 32 * rX && leftBallMovement.y + centerY - 16 + leftBallMovement.y < centerY + 46) 
+        leftBallMovement.x = 2 * centerX - 32 * rX;
 
-var freeFall = () => {
-    if(dist((leftBallStartPoint.x + leftBallMovement.x) * rX, 0, 0, 0) <= 600 * rX)
-    leftBallMovement.y -= gravity * leftChangedTime * leftChangedTime;
+    if(rightBallMovement.x < -  2 * centerX + 32 * rX && rightBallMovement.y + centerY - 16 + rightBallMovement.y < centerY + 46) 
+        rightBallMovement.x = - 2 * centerX + 32 * rX;
     
-    if(dist((rightBallStartPoint.x + rightBallMovement.x) * rX, 0, 0, 0) <= 600 * rX)
-    rightBallMovement.y -= gravity * rightChangedTime * rightChangedTime;
-}
-
-var physicsMovement = () => {
-    let time = deltaTime / 1000;
-    if(leftVisibility) {
-        leftControl.y -= (leftV0 * Math.sin(20 * Math.PI / 180) * time);
-        angleLeft = -Math.atan((leftControl.y * rY) / (125 * rX)) * (180/Math.PI);
-        leftV0 -= 9.8 * time * time;
-        leftBallMovement.y += leftV0 * Math.sin(20 * Math.PI / 180) * time;
-    }    
-    if(rightVisibility) {
-        rightControl.y -= (rightV0 * Math.sin(20 * Math.PI / 180) * time);
-        angleRight = -Math.atan((rightControl.y * rY) / (125 * rX)) * (180/Math.PI);
-    }
 }
 
 var checkLimit = () => {
@@ -335,10 +343,66 @@ var checkLimit = () => {
 
 //RESET THE SCENE BACK TO DEFAULT
 var reset = () => {
-    angleLeft = 20;
-    angleRight = 20;
-    leftControl = createVector(0,Math.tan(-angleLeft * Math.PI / 180) * 125 / rY * rX);
-    rightControl = createVector(0,Math.tan(-angleRight * Math.PI / 180) * 125 / rY * rX);
+    angleLeft = maxAlpha;
+    angleRight = maxAlpha;
     leftBallMovement = createVector(0,0);
     rightBallMovement = createVector(0,0);
+    leftChangedTime = 1;
+    rightChangedTime = 1;
+    leftShouldLaunch = true;
+    leftIsPulled = false;
+    leftV0fromEP = 0;
+    leftV0 = 0;
+    rightShouldLaunch = true;
+    rightIsPulled = false;
+    rightV0fromEP = 0;
+    rightV0 = 0;
+}
+
+//=========================PHYSICS FUNCTION=============================//
+var freeFall = () => {
+    if(leftBallMovement.x >= 1)
+    leftBallMovement.y -= gravity * leftChangedTime * leftChangedTime;
+    
+    if(rightBallMovement.x <= -1)
+    rightBallMovement.y -= gravity * rightChangedTime * rightChangedTime;
+}
+
+var getVelocity0FromPotentialEnergy = (leftOrRight) => {
+    if(leftOrRight) {
+        let leftInitialPosition = createVector((-600 - 125 * Math.cos(maxAlpha)) * rX, (30 + 125 * Math.sin(maxAlpha)) * rY);
+        let leftActualPosition = createVector((-600 - 125 * Math.cos(angleLeft)) * rX, (30 + 125 * Math.sin(angleLeft)) * rY);
+        let difference = dist(leftInitialPosition.x, leftInitialPosition.y, leftActualPosition.x, leftActualPosition.y);
+        let epLeft = elasticityKonstant * Math.pow(difference, 2);
+        //If mass of ball is 1, then the starting velocity of the ball is:
+        leftV0fromEP = Math.sqrt(epLeft * 2);
+        leftV0 = createVector(leftV0fromEP * Math.cos(angleLeft), leftV0fromEP * Math.sin(angleLeft));
+    } else {
+        let rightInitialPosition = createVector((600 + 125 * Math.cos(maxAlpha)) * rX, (30 + 125 * Math.sin(maxAlpha)) * rY);
+        let rightActualPosition = createVector((600 + 125 * Math.cos(angleRight)) * rX, (30 + 125 * Math.sin(angleRight)) * rY);
+        let difference = dist(rightInitialPosition.x, rightInitialPosition.y, rightActualPosition.x, rightActualPosition.y);
+        let epRight = elasticityKonstant * Math.pow(difference, 2);
+        //If mass of ball is 1, then the starting velocity of the ball is:
+        rightV0fromEP = Math.sqrt(epRight * 2);
+        rightV0 = createVector(rightV0fromEP * Math.cos(angleRight), rightV0fromEP * Math.sin(angleRight));
+    }
+}
+
+var moveBalls = () => {
+    if(angleLeft == maxAlpha && leftIsPulled && leftShouldLaunch) {
+        leftBallMovement.x += leftV0.x * leftChangedTime;
+        leftBallMovement.y -= leftV0.y * leftChangedTime;
+        leftChangedTime += deltaTime / 1000;
+    }
+    if(angleRight == maxAlpha && rightIsPulled && rightShouldLaunch) {
+        rightBallMovement.x -= rightV0.x * rightChangedTime;
+        rightBallMovement.y -= rightV0.y * rightChangedTime;
+        rightChangedTime += deltaTime / 1000;
+    }
+}
+
+var changeBackSeesaw = () => {
+    
+    
+    
 }
