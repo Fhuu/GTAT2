@@ -400,9 +400,3 @@ var moveBalls = () => {
         rightChangedTime += deltaTime / 1000;
     }
 }
-
-var changeBackSeesaw = () => {
-    
-    
-    
-}
