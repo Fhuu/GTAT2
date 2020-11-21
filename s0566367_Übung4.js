@@ -32,28 +32,32 @@ var canvasID = 'pTest'; // ist eine Variable!!!
 var startButton;
 
 //VARIABLE NEEDED FOR DYNAMIC MOVEMENT
+var triCenter;
 var triHeight;
 var maxAlpha;
 var angleLeft, angleRight; //ANGLE FOR WIPPE
+
+var seesawHalfLength;
 
 //BALL VARIABLE
 var ballPositionToSeesaw;
 var leftBallStartPoint, rightBallStartPoint;
 
 var leftIsPulled, rightIsPulled;
-var leftVisibility, rightVisibility; //VISIBILITY OF DRAG CIRCLE
+var leftIsHovering, rightIsHovering; //VISIBILITY OF DRAG CIRCLE
+var leftIsOnFloor, rightIsOnFloor;
+var leftIsReleased, rightIsReleased;
+var leftIsMaxed, rightIsMaxed;
+var leftIsLaunched, rightIsLaunched;
+
 var leftStartY, rightStartY;
 var leftControl, rightControl; //POSITION OF DRAG CIRCLE
 var rightBallMovement, leftBallMovement; //FOR BALL MOVEMENT
 
 //=====================PHYSICS VARIABLE=========================//
 var gravity;
-
-var leftChangedTime, rightChangedTime;
-var elasticityKonstant;
-var leftV0fromEP, rightV0fromEP;
-var leftV0, rightV0;
-var leftShouldLaunch, rightShouldLaunch;
+var leftTotalTime, rightTotalTime;
+var maxV0, leftV0, rightV0;
 
 var movingAngle;
 
@@ -77,21 +81,33 @@ function setup() {
 
     //HEIGHT OF SUPPORT TRIANGLE IS 50
     //ANGLE CALCULATION
+    triCenter = 600;
     triHeight = 46;
     maxAlpha = Math.asin((triHeight * rX) / (-125 * rY));
     angleLeft = maxAlpha;
     angleRight = maxAlpha;
 
+    seesawHalfLength = 125;
+
     //BALL VARIABLE
     ballPositionToSeesaw = 6.5 / 10;
-    leftBallStartPoint = createVector(-600 - 125 * ballPositionToSeesaw * Math.cos(angleLeft), 30 + Math.sin(angleLeft) * 125 * ballPositionToSeesaw);    
-    rightBallStartPoint = createVector(600 + 125 * ballPositionToSeesaw * Math.cos(angleRight), 30 + Math.sin(angleRight) * 125 * ballPositionToSeesaw);
+    leftBallStartPoint = createVector(-triCenter - seesawHalfLength * ballPositionToSeesaw * Math.cos(angleLeft), (triHeight - 16) + Math.sin(angleLeft) * seesawHalfLength * ballPositionToSeesaw);    
+    rightBallStartPoint = createVector(triCenter + seesawHalfLength * ballPositionToSeesaw * Math.cos(angleRight), (triHeight - 16) + Math.sin(angleRight) * seesawHalfLength * ballPositionToSeesaw);
     
+    //STATES
     leftIsPulled = false;
     rightIsPulled = false;
-    //DEFAULT VISIBILITY OF DRAG CIRCLE ARE TRUE(THEY SHOULD BE VISIBLE)
-    leftVisibility = true;
-    rightVisibility = true;
+    leftIsHovering = true;
+    rightIsHovering = true;
+    leftIsOnFloor = false;
+    rightIsOnFloor = false;
+    leftIsReleased = false;
+    rightIsReleased = false;
+    leftIsMaxed = false;
+    rightIsMaxed = false;
+    leftIsLaunched = false;
+    rightIsLaunched = false;
+
     //THE DEFAULT POSITION OF DRAG CIRCLE, IT TAKES THE ANGLE IN CONSIDERATION FOR THE STARTING POINT
     leftControl = createVector(0, 0);
     rightControl = createVector(0, 0);
@@ -101,20 +117,14 @@ function setup() {
 
 
     //=======PHYSICS SETUP========//
-    gravity = 9.8;
+    gravity = 9.8 * 20;
+    leftTotalTime = 0;
+    rightTotalTime = 0;
 
-    leftChangedTime = 1;
-    rightChangedTime = 1;
-    elasticityKonstant = 0.03;
-    //lets say ball's mass is 1
-    leftV0fromEP = 0;
-    rightV0fromEP = 0;
-    leftV0 = createVector(0,0);
-    rightV0 = createVector(0,0);
+    maxV0 = 35 * 20;
+    leftV0 = 0;
+    rightV0 = 0;
 
-    leftShouldLaunch = true;
-    rightShouldLaunch = true;
-    movingAngle = 0;
 }
 
 
@@ -155,7 +165,7 @@ function draw() {
     push();
     fill(0);
     textSize(40);
-    text("Diro Baloska S0566367 08.11.2020", 400, 50);
+    text("Diro Baloska S0566367 21.11.2020", 400, 50);
     pop();
 
 
@@ -176,24 +186,24 @@ function draw() {
         //==================================LEFT SYSTEM===========================//
         push();
             fill(color(0,0,0));
-            triangle(-600 * rX, 30 * rY, -630 * rX, -16 * rY, -570 * rX, -16 * rY);
+            triangle(-triCenter * rX, (triHeight - 16) * rY, -630 * rX, -16 * rY, -570 * rX, -16 * rY);
         pop();
 
         //SEESAW
         push();
-            translate(-600 * rX, 30 * rY);
+            translate(-triCenter * rX, (triHeight - 16) * rY);
             rotate(angleLeft);
-            line(-125 * rX, 0, 125 * rX, 0);
+            line(-seesawHalfLength * rX, 0, seesawHalfLength * rX, 0);
             fill(color(0,0,0));
             triangle(-60 * rX, 25 * rY, -68 * rX, 0, -52 * rX, 0);
         pop();
         push();
             fill(color('#00000000'));
-            if(leftVisibility) 
+            if(leftIsHovering) 
             stroke(color(0,0,0));
             else
-            stroke(color(255,0,0));
-            circle((-600 - 125 * Math.cos(angleLeft)) * rX, (30 + 125 * Math.sin(angleLeft)) * rY, 64 * rX);
+            stroke(color(0,0,0,0));
+            circle((-triCenter - seesawHalfLength * Math.cos(angleLeft)) * rX, ((triHeight - 16) + seesawHalfLength * Math.sin(angleLeft)) * rY, 64 * rX);
         pop();
 
         //LEFT BALL
@@ -206,24 +216,24 @@ function draw() {
         //==================================RIGHT SYSTEM===========================//
         push();
             fill(color(0,0,0));
-            triangle(600 * rX, 30 * rY, 630 * rX, -16 * rY, 570 * rX, -16 * rY);
+            triangle(triCenter * rX, (triHeight - 16) * rY, 630 * rX, -16 * rY, 570 * rX, -16 * rY);
         pop();
 
         //SEESAW
         push();
-            translate(600 * rX, 30 * rY);
+            translate(triCenter * rX, (triHeight - 16) * rY);
             rotate(-angleRight);
-            line(-125 * rX, 0, 125 * rX, 0);
+            line(-seesawHalfLength * rX, 0, seesawHalfLength * rX, 0);
             fill(color(0,0,0));
             triangle(60 * rX, 25 * rY, 68 * rX, 0, 52 * rX, 0);
         pop();
         push();
             fill(color('#00000000'));
-            if(rightVisibility) 
+            if(rightIsHovering) 
             stroke(color(0,0,0));
             else
-            stroke(color(255,0,0));
-            circle((600 + 125 * Math.cos(angleRight)) * rX, (30 + 125 * Math.sin(angleRight)) * rY, 64 * rX);
+            stroke(color(0,0,0,0));
+            circle((triCenter + seesawHalfLength * Math.cos(angleRight)) * rX, ((triHeight - 16) + seesawHalfLength * Math.sin(angleRight)) * rY, 64 * rX);
         pop();
 
         //RIGHT BALL
@@ -237,25 +247,22 @@ function draw() {
     pop();    
 
     //=================================Physics====================================//
-    //Potential energie of the spring Ep = (1/2)*elasticityConstant*deltaPosition²
+    isMaxed();
+    countTime(frmRate, leftIsMaxed, rightIsMaxed);
     checkLimit();
-    freeFall();
-    moveBalls();
-
-
-    //================================Collision===================================//
+    moveSeesaw();
+    moveBall();
     isOnFloor();
-    verticalLimit();
-    // angleLeft -= 0.01;
+    horizontalLimit();
 }
 
 
 var changeBallAngle = () => {
-    if(leftBallMovement.x < 125 * rX)
-    leftBallStartPoint = createVector(-600 - 125 * ballPositionToSeesaw * Math.cos(angleLeft) + 16 * Math.sin(angleLeft), 30 + Math.sin(angleLeft) * 125 * ballPositionToSeesaw + Math.cos(angleLeft) * 16);
+    if(leftBallMovement.x < seesawHalfLength * rX)
+    leftBallStartPoint = createVector(-triCenter - seesawHalfLength * ballPositionToSeesaw * Math.cos(angleLeft) + 16 * Math.sin(angleLeft), (triHeight - 16) + Math.sin(angleLeft) * seesawHalfLength * ballPositionToSeesaw + Math.cos(angleLeft) * 16);
     
-    if(rightBallMovement.x > -125 * rX)
-    rightBallStartPoint = createVector(600 + 125 * ballPositionToSeesaw * Math.cos(angleRight) - 16 * Math.sin(angleRight), 30 + Math.sin(angleRight) * 125 * ballPositionToSeesaw + Math.cos(angleRight) * 16);
+    if(rightBallMovement.x > -seesawHalfLength * rX)
+    rightBallStartPoint = createVector(triCenter + seesawHalfLength * ballPositionToSeesaw * Math.cos(angleRight) - 16 * Math.sin(angleRight), (triHeight - 16) + Math.sin(angleRight) * seesawHalfLength * ballPositionToSeesaw + Math.cos(angleRight) * 16);
     
 }
 
@@ -263,63 +270,64 @@ var changeBallAngle = () => {
 //IF VISIBILITY IS TRUE, MOUSE IS OVER THE CIRCLE
 //WHICH MEANS THE CIRCLE CAN BE DRAGGED
 function mouseDragged() {
-    if(!leftVisibility) {
-        angleLeft = Math.atan((centerY - 30 - mouseY) * rX / 125);
-        getVelocity0FromPotentialEnergy(true);
+    if(!leftIsHovering) {
+        angleLeft = Math.atan((mouseY - centerY + 16) / seesawHalfLength) / rY;  
+        if(!leftIsLaunched) leftV0 = maxV0 / (2 * maxAlpha) * Math.abs(angleLeft - maxAlpha);
         leftIsPulled = true;
     } 
 
-    if(!rightVisibility) {
-        angleRight = Math.atan((centerY - 30 - mouseY) * rX / 125);    
-        getVelocity0FromPotentialEnergy(false);
+    if(!rightIsHovering) {
+        angleRight = Math.atan((mouseY - centerY + 16) / seesawHalfLength) / rY;  
+        if(!rightIsLaunched) rightV0 = maxV0 / (2 * maxAlpha) * Math.abs(angleRight - maxAlpha);
         rightIsPulled = true;
     } 
 }
 
+function mouseReleased() {
+    if(!leftIsHovering) leftIsReleased = true;
+    if(!rightIsHovering) rightIsReleased = true;
+}
+
 //WHETHER THE MOUSE IS OVER DRAG CIRCLE OR NOT
 var isMouseOver = () => {
-    let dLeft = dist(centerX + (-600 - 125 * Math.cos(angleLeft)) * rX, centerY + (30 + 125 * Math.sin(angleLeft))  * rY, mouseX, mouseY);
-    if(dLeft < 32) {
-        leftVisibility = false;
+    let dLeft = dist(centerX + (-triCenter - seesawHalfLength * Math.cos(angleLeft)) * rX, centerY + ((triHeight - 16) + seesawHalfLength * Math.sin(angleLeft))  * rY, mouseX, mouseY);
+    if(dLeft < 32 * rX) {
+        leftIsHovering = false;
     } else {
-        leftVisibility = true;
-        if(angleLeft !== maxAlpha) {
-            angleLeft += leftV0fromEP / 125 * rX;
-        }
+        leftIsHovering = true;
     }
 
-    let dRight = dist(centerX + (600 + 125 * Math.cos(angleRight)) * rX, centerY + (30 + 125 * Math.sin(angleRight))  * rY, mouseX, mouseY);
-    if(dRight < 32) {
-        rightVisibility = false;
+    let dRight = dist(centerX + (triCenter + seesawHalfLength * Math.cos(angleRight)) * rX, centerY + ((triHeight - 16) + seesawHalfLength * Math.sin(angleRight))  * rY, mouseX, mouseY);
+    if(dRight < 32 * rX) {
+        rightIsHovering = false;
     } else {
-        rightVisibility = true;
-        if(angleRight !== maxAlpha) {
-            angleRight += rightV0fromEP / 125 * rX;
-        }
+        rightIsHovering = true;
     }
 }
 
 var isOnFloor = () => {
     if(leftBallStartPoint.y + leftBallMovement.y < 0) {
         leftBallMovement.y = -leftBallStartPoint.y;    
-        leftShouldLaunch = false;
+        leftIsOnFloor = true;
     }
     if(rightBallStartPoint.y + rightBallMovement.y < 0) {
         rightBallMovement.y = -rightBallStartPoint.y;
-        rightShouldLaunch = false;
+        rightIsOnFloor = true;
     }
 }
 
-var verticalLimit = () => {
+var horizontalLimit = () => {
     // leftBallMovement.x += 10;
     // rightBallMovement.x -= 10;
     // console.log(centerX + 600);
     // console.log(leftBallStartPoint.x + leftBallMovement.x);
-    if(leftBallMovement.x > 2 * centerX - 32 * rX && leftBallMovement.y + centerY - 16 + leftBallMovement.y < centerY + 46) 
-        leftBallMovement.x = 2 * centerX - 32 * rX;
+    if(leftBallMovement.x > -leftBallStartPoint.x + centerX / rX - 16) {
+        leftBallMovement.x = -leftBallStartPoint.x + centerX / rX - 16;
+        if(leftIsOnFloor) leftV0 = 0;
+    }
 
-    if(rightBallMovement.x < -  2 * centerX + 32 * rX && rightBallMovement.y + centerY - 16 + rightBallMovement.y < centerY + 46) 
-        rightBallMovement.x = - 2 * centerX + 32 * rX;
+    if(rightBallMovement.x < -rightBallStartPoint.x -centerX / rX + 16) 
+        rightBallMovement.x = -rightBallStartPoint.x -centerX / rX + 16;
     
 }
 
@@ -347,62 +355,76 @@ var reset = () => {
     angleRight = maxAlpha;
     leftBallMovement = createVector(0,0);
     rightBallMovement = createVector(0,0);
-    leftChangedTime = 1;
-    rightChangedTime = 1;
-    leftShouldLaunch = true;
+    leftTotalTime = 0;
+    rightTotalTime = 0;
+    //STATES
     leftIsPulled = false;
-    leftV0fromEP = 0;
-    leftV0 = 0;
-    rightShouldLaunch = true;
     rightIsPulled = false;
-    rightV0fromEP = 0;
+    leftIsHovering = true;
+    rightIsHovering = true;
+    leftIsOnFloor = false;
+    rightIsOnFloor = false;
+    leftIsReleased = false;
+    rightIsReleased = false;
+    leftIsMaxed = false;
+    rightIsMaxed = false;
+    leftIsLaunched = false;
+    rightIsLaunched = false;
+    leftV0 = 0;
     rightV0 = 0;
 }
 
 //=========================PHYSICS FUNCTION=============================//
-var freeFall = () => {
-    if(leftBallMovement.x >= 1)
-    leftBallMovement.y -= gravity * leftChangedTime * leftChangedTime;
+var moveBall = () => {
     
-    if(rightBallMovement.x <= -1)
-    rightBallMovement.y -= gravity * rightChangedTime * rightChangedTime;
+
+    if(leftIsMaxed && leftV0 !== 0) {
+        leftIsLaunched = true;
+        console.log(leftTotalTime);
+        leftBallMovement.x = leftV0 * Math.sin(maxAlpha) * leftTotalTime;
+        leftBallMovement.y = leftV0 * Math.cos(maxAlpha) * leftTotalTime - (gravity * leftTotalTime * leftTotalTime) / 2;
+    }
+
+    if(rightIsMaxed && rightV0 !== 0) {
+        rightIsLaunched = true;
+        rightBallMovement.x = -rightV0 * Math.sin(maxAlpha) * rightTotalTime;
+        rightBallMovement.y = rightV0 * Math.cos(maxAlpha) * rightTotalTime - (gravity * rightTotalTime * rightTotalTime) / 2;
+    }
+    
+
 }
 
-var getVelocity0FromPotentialEnergy = (leftOrRight) => {
-    if(leftOrRight) {
-        let leftInitialPosition = createVector((-600 - 125 * Math.cos(maxAlpha)) * rX, (30 + 125 * Math.sin(maxAlpha)) * rY);
-        let leftActualPosition = createVector((-600 - 125 * Math.cos(angleLeft)) * rX, (30 + 125 * Math.sin(angleLeft)) * rY);
-        let difference = dist(leftInitialPosition.x, leftInitialPosition.y, leftActualPosition.x, leftActualPosition.y);
-        let epLeft = elasticityKonstant * Math.pow(difference, 2);
-        //If mass of ball is 1, then the starting velocity of the ball is:
-        leftV0fromEP = Math.sqrt(epLeft * 2);
-        leftV0 = createVector(-leftV0fromEP * Math.sin(angleLeft), -leftV0fromEP * Math.cos(angleLeft));
-    } else {
-        let rightInitialPosition = createVector((600 + 125 * Math.cos(maxAlpha)) * rX, (30 + 125 * Math.sin(maxAlpha)) * rY);
-        let rightActualPosition = createVector((600 + 125 * Math.cos(angleRight)) * rX, (30 + 125 * Math.sin(angleRight)) * rY);
-        let difference = dist(rightInitialPosition.x, rightInitialPosition.y, rightActualPosition.x, rightActualPosition.y);
-        let epRight = elasticityKonstant * Math.pow(difference, 2);
-        //If mass of ball is 1, then the starting velocity of the ball is:
-        rightV0fromEP = Math.sqrt(epRight * 2);
-        rightV0 = createVector(-rightV0fromEP * Math.sin(angleRight), -rightV0fromEP * Math.cos(angleRight));
-    }
+var countTime = (frameRate, leftIsMaxed, rightIsMaxed) => {
+    if(!leftIsPulled && leftV0 !== 0 && leftIsMaxed) leftTotalTime += 1 / frameRate;
+    if(!rightIsPulled && rightV0 !== 0 && rightIsMaxed) rightTotalTime += 1 / frameRate;
 }
 
-var moveBalls = () => {
-    if(angleLeft == maxAlpha && leftIsPulled && leftShouldLaunch) {
-        leftBallMovement.x += leftV0.x * leftChangedTime;
-        leftBallMovement.y -= leftV0.y * leftChangedTime;
-        leftChangedTime += deltaTime / 1000;
+var isMaxed = () => {
+    if(angleLeft === maxAlpha) {
+        leftIsMaxed = true;
+        leftIsReleased = false;
+        leftIsPulled = false;
+    } else{
+        leftIsMaxed = false;
+
+    } 
+
+    if(angleRight === maxAlpha) {
+        rightIsMaxed = true;
+        rightIsReleased = false;
+        rightIsPulled = false;
     }
-    if(angleRight == maxAlpha && rightIsPulled && rightShouldLaunch) {
-        rightBallMovement.x -= rightV0.x * rightChangedTime;
-        rightBallMovement.y -= rightV0.y * rightChangedTime;
-        rightChangedTime += deltaTime / 1000;
-    }
+    else {
+        rightIsMaxed = false;
+
+    } 
 }
 
-var changeBackSeesaw = () => {
-    
-    
-    
+var moveSeesaw = () => {
+    if(angleLeft < maxAlpha && leftIsReleased) {
+        angleLeft += leftV0 * (1 / 60) / seesawHalfLength * rX;
+    }
+    if(angleRight < maxAlpha && rightIsReleased) {
+        angleRight += rightV0 * (1 / 60) / seesawHalfLength * rX;
+    }
 }
