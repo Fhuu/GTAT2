@@ -49,6 +49,7 @@ var leftIsOnFloor, rightIsOnFloor;
 var leftIsReleased, rightIsReleased;
 var leftIsMaxed, rightIsMaxed;
 var leftIsLaunched, rightIsLaunched;
+var leftIsOnSeesaw, rightIsOnSeesaw;
 
 var leftStartY, rightStartY;
 var leftControl, rightControl; //POSITION OF DRAG CIRCLE
@@ -107,6 +108,8 @@ function setup() {
     rightIsMaxed = false;
     leftIsLaunched = false;
     rightIsLaunched = false;
+    leftIsOnSeesaw = true;
+    rightIsOnSeesaw = true;
 
     //THE DEFAULT POSITION OF DRAG CIRCLE, IT TAKES THE ANGLE IN CONSIDERATION FOR THE STARTING POINT
     leftControl = createVector(0, 0);
@@ -427,4 +430,8 @@ var moveSeesaw = () => {
     if(angleRight < maxAlpha && rightIsReleased) {
         angleRight += rightV0 * (1 / 60) / seesawHalfLength * rX;
     }
+}
+
+var isOnSeesaw = () => {
+    if(leftBallMovement <)
 }
