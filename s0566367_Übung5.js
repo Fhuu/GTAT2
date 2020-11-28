@@ -448,6 +448,7 @@ var moveBall = () => {
         
         leftBallMovement.x += leftSlopeMovement.x;
         leftBallMovement.y += leftSlopeMovement.y;
+        
     }
 
     if(leftState === 'ONFLOOR' && leftOldState === 'ONSLOPE') {
