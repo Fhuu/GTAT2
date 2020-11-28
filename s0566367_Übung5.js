@@ -424,14 +424,18 @@ var moveBall = () => {
 
 }
 
+var isOnFloor = () => {
+    
+}
+
 var countTime = (frameRate, leftIsMaxed, rightIsMaxed) => {
-    if(!leftIsPulled && leftV0 !== 0 && leftIsMaxed) {
+    if(leftOldState === 'PRELAUNCH' && leftState === 'LAUNCH') {
         if(leftIsGettingInSlope && !leftIsGettingOutSlope) leftGravityTime += 1/frameRate;
         if(!leftIsGettingInSlope) leftTotalTime += 1 / frameRate;
         if(leftIsGettingOutSlope) leftOutSlopeTime += 1/frameRate; 
     }
 
-    if(!rightIsPulled && rightV0 !== 0 && rightIsMaxed) {
+    if(rightOldState === 'RELEASE' && rightState === 'PRELAUNCH') {
         if(rightIsGettingInSlope && !rightIsGettingOutSlope) rightGravityTime += 1/frameRate;
         if(!rightIsGettingInSlope) rightTotalTime += 1 / frameRate;
         if(rightIsGettingOutSlope) rightOutSlopeTime += 1/frameRate;
@@ -439,62 +443,48 @@ var countTime = (frameRate, leftIsMaxed, rightIsMaxed) => {
 }
 
 var isMaxed = () => {
-    if(angleLeft === maxAlpha) {
-        leftIsMaxed = true;
-        leftIsReleased = false;
-        leftIsPulled = false;
-    } else{
-        leftIsMaxed = false;
-
-    } 
-
-    if(angleRight === maxAlpha) {
-        rightIsMaxed = true;
-        rightIsReleased = false;
-        rightIsPulled = false;
+    if(angleLeft === maxAlpha && leftOldState === 'RELEASE' && leftState === 'PRELAUNCH') {
+        stateChange('left', 'LAUNCH');
     }
-    else {
-        rightIsMaxed = false;
 
-    } 
+    if(angleRight === maxAlpha && rightOldState === 'RELEASE' && rightState === 'PRELAUNCH') {
+        stateChange('right', 'LAUNCH');
+    }
 }
 
 var moveSeesaw = () => {
-    if(angleLeft < maxAlpha && leftIsReleased) {
+    if(leftState === 'PRELAUNCH' && leftOldState === 'RELEASE') {
         angleLeft += leftV0 * (1 / 60) / seesawHalfLength * rX;
     }
-    if(angleRight < maxAlpha && rightIsReleased) {
+    if(rightState === 'PRELAUNCH' && rightOldState === 'RELEASE') {
         angleRight += rightV0 * (1 / 60) / seesawHalfLength * rX;
     }
 }
 
 var isOnSeesaw = () => {
-   stateChange()
+    let seesawArea = Math.cos(maxAlpha) * seesawHalfLength;
+
+    if(leftBallStartPoint.x + leftBallMovement.x > 600 - seesawArea - ballSlopeDiff && leftBallStartPoint.x + leftBallMovement.x < 600 + seesawArea) {
+        stateChange('left', 'ONSLOPE');
+    }
+
+    if(rightBallStartPoint.x + rightBallMovement.x < -600 + seesawArea + ballSlopeDiff && rightBallStartPoint.x + rightBallMovement.x > -600 - seesawArea) {
+        stateChange('right', 'ONSLOPE')
+    }
 }
 
 
-var leftStates = [
-    'BEGIN',
-    'START',
-    'HOVER',
-    'PULL',
-    'RELEASE',
-    'PRELAUNCH',
-    'LAUNCH',
-    'ONFLOOR',
-    'ONSLOPE',
-]
-var rightstates = [
-    'BEGIN',
-    'START',
-    'HOVER',
-    'PULL',
-    'RELEASE',
-    'PRELAUNCH',
-    'LAUNCH',
-    'ONFLOOR',
-    'ONSLOPE',
-]
+// var states = [
+//     'BEGIN',
+//     'START',
+//     'HOVER',
+//     'PULL',
+//     'RELEASE',
+//     'PRELAUNCH',
+//     'LAUNCH',
+//     'ONFLOOR',
+//     'ONSLOPE',
+// ]
 
 var leftState = 'BEGIN';
 var leftOldState = 'BEGIN'
