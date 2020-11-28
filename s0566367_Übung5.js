@@ -502,7 +502,14 @@ var leftOldState = 'BEGIN'
 var rightState = 'BEGIN';
 var rightOldState = 'BEGIN'
 
-var stateChange = (state, newState) => {
-    oldState = state;
-    state = newState;
+var stateChange = (side, newState) => {
+    if(side === 'left') {
+        leftOldState = state;
+        leftState = newState;
+    }
+    
+    if(side === 'right') {
+        rightOldState = state;
+        rightState = newState;
+    }
 }
