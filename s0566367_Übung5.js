@@ -276,6 +276,7 @@ function draw() {
 
     //=================================Physics====================================//
     checkLimit();
+    isOnFloor();
     isMaxed();
     countTime(frmRate, leftIsMaxed, rightIsMaxed);
     moveSeesaw();
@@ -321,7 +322,7 @@ function mouseReleased() {
 //WHETHER THE MOUSE IS OVER DRAG CIRCLE OR NOT
 var isMouseOver = () => {
     let dLeft = dist(centerX + (-triCenter - seesawHalfLength * Math.cos(angleLeft)) * rX, centerY + ((triHeight - 16) + seesawHalfLength * Math.sin(angleLeft))  * rY, mouseX, mouseY);
-    if(dLeft < ballDiameter * rX && leftState !== 'PULL' && leftState !== 'RELEASE') {
+    if(dLeft < ballDiameter * rX && (leftState === 'START' || leftState === 'HOVER')) {
         stateChange('left', 'HOVER');
     } else {
         if(leftState === 'HOVER') {
@@ -427,8 +428,22 @@ var reset = () => {
 var moveBall = () => {
 
 
+    let leftV0Sin = leftV0 * Math.sin(maxAlpha);    
     if(leftState === 'LAUNCH' || leftState === 'ONAIR') {
-        
+        console.log(leftTotalTime);
+        leftBallMovement.x = leftV0Sin * leftTotalTime;
+        leftBallMovement.y = leftV0 * Math.cos(maxAlpha) * leftTotalTime - (gravity * leftTotalTime * leftTotalTime) / 2;
+        stateChange('left', 'ONAIR');
+    }
+
+    if(leftState === 'ONFLOOR') {
+        leftBallMovement.x = leftV0Sin * leftTotalTime;
+    }
+
+    if(leftState === 'ONSLOPE') {
+        leftBallMovement.x -= leftSlopeMovement.x;
+        leftBallMovement.y -= leftSlopeMovement.y;
+
     }
 
 }
@@ -446,11 +461,11 @@ var isOnFloor = () => {
 }
 
 var countTime = (frameRate, leftIsMaxed, rightIsMaxed) => {
-    if(leftOldState === 'PRELAUNCH' && leftState === 'LAUNCH') {
-        if(leftState === 'ONSLOPE' && leftOldState === 'ONFLOOR') leftGravityTime += 1/frameRate;
-        if(leftState === 'ONAIR') leftTotalTime += 1 / frameRate;
-        if(leftState === 'ONFLOOR' && leftOldState === 'ONSLOPE') leftOutSlopeTime += 1/frameRate; 
+    if(leftState === 'LAUNCH' || leftState === 'ONAIR' || (leftState === 'ONFLOOR' && leftOldState !== 'ONSLOPE')) {
+        leftTotalTime += 1 / frameRate;
     }
+
+    if(leftState === 'ONSLOPE') leftGravityTime += 1 / 60;
 
     if(rightOldState === 'RELEASE' && rightState === 'PRELAUNCH') {
         if(rightIsGettingInSlope && !rightIsGettingOutSlope) rightGravityTime += 1/frameRate;
