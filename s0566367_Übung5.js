@@ -275,13 +275,15 @@ function draw() {
     pop();    
 
     //=================================Physics====================================//
+    checkLimit();
     isMaxed();
     countTime(frmRate, leftIsMaxed, rightIsMaxed);
-    checkLimit();
     moveSeesaw();
     moveBall();
     horizontalLimit();
     isOnSeesaw();
+
+    console.log(leftOldState, ' => ', leftState);
 }
 
 
@@ -298,10 +300,10 @@ var changeBallAngle = () => {
 //IF VISIBILITY IS TRUE, MOUSE IS OVER THE CIRCLE
 //WHICH MEANS THE CIRCLE CAN BE DRAGGED
 function mouseDragged() {
-    if(!leftIsHovering) {
+    if(leftState === 'HOVER' || leftState === 'PULL') {
         angleLeft = Math.atan((mouseY - centerY + 16) / seesawHalfLength) / rY;  
         if(!leftIsLaunched) leftV0 = maxV0 / (2 * maxAlpha) * Math.abs(angleLeft - maxAlpha);
-        leftIsPulled = true;
+        stateChange('left', 'PULL');
     } 
 
     if(!rightIsHovering) {
@@ -312,17 +314,19 @@ function mouseDragged() {
 }
 
 function mouseReleased() {
-    if(!leftIsHovering) leftIsReleased = true;
+    if(leftState === 'PULL') stateChange('left', 'RELEASE');
     if(!rightIsHovering) rightIsReleased = true;
 }
 
 //WHETHER THE MOUSE IS OVER DRAG CIRCLE OR NOT
 var isMouseOver = () => {
     let dLeft = dist(centerX + (-triCenter - seesawHalfLength * Math.cos(angleLeft)) * rX, centerY + ((triHeight - 16) + seesawHalfLength * Math.sin(angleLeft))  * rY, mouseX, mouseY);
-    if(dLeft < ballDiameter * rX) {
-        leftIsHovering = false;
+    if(dLeft < ballDiameter * rX && leftState !== 'PULL' && leftState !== 'RELEASE') {
+        stateChange('left', 'HOVER');
     } else {
-        leftIsHovering = true;
+        if(leftState === 'HOVER') {
+            stateChange('left', 'BEGIN');
+        }
     }
 
     let dRight = dist(centerX + (triCenter + seesawHalfLength * Math.cos(angleRight)) * rX, centerY + ((triHeight - 16) + seesawHalfLength * Math.sin(angleRight))  * rY, mouseX, mouseY);
@@ -422,6 +426,10 @@ var reset = () => {
 //=========================PHYSICS FUNCTION=============================//
 var moveBall = () => {
 
+    if(leftState === 'LAUNCH') {
+
+    }
+
 }
 
 var isOnFloor = () => {
@@ -430,9 +438,9 @@ var isOnFloor = () => {
         stateChange('left', 'ONFLOOR');
     }
 
-    if(leftBallMovement.y + leftBallStartPoint.y < 0) {
-        leftBallMovement.y = -leftBallStartPoint.y;
-        stateChange('left', 'ONFLOOR');
+    if(rightBallMovement.y + rightBallStartPoint.y < 0) {
+        rightBallMovement.y = -rightBallStartPoint.y;
+        stateChange('right', 'ONFLOOR');
     }
 }
 
@@ -451,20 +459,20 @@ var countTime = (frameRate, leftIsMaxed, rightIsMaxed) => {
 }
 
 var isMaxed = () => {
-    if(angleLeft === maxAlpha && leftOldState === 'RELEASE' && leftState === 'PRELAUNCH') {
+    if(angleLeft === maxAlpha && leftOldState === 'PULL' && leftState === 'RELEASE') {
         stateChange('left', 'LAUNCH');
     }
 
-    if(angleRight === maxAlpha && rightOldState === 'RELEASE' && rightState === 'PRELAUNCH') {
+    if(angleRight === maxAlpha && rightOldState === 'PULL' && rightState === 'RELEASE') {
         stateChange('right', 'LAUNCH');
     }
 }
 
 var moveSeesaw = () => {
-    if(leftState === 'PRELAUNCH' && leftOldState === 'RELEASE') {
+    if(leftState === 'RELEASE' && leftOldState === 'PULL') {
         angleLeft += leftV0 * (1 / 60) / seesawHalfLength * rX;
     }
-    if(rightState === 'PRELAUNCH' && rightOldState === 'RELEASE') {
+    if(rightState === 'RELEASE' && rightOldState === 'PULL') {
         angleRight += rightV0 * (1 / 60) / seesawHalfLength * rX;
     }
 }
@@ -490,24 +498,25 @@ var isOnSeesaw = () => {
 //     'RELEASE',
 //     'PRELAUNCH',
 //     'LAUNCH',
+//     'ONAIR',
 //     'ONFLOOR',
 //     'ONSLOPE',
 // ]
 
-var leftState = 'BEGIN';
-var leftOldState = 'BEGIN'
+var leftState = 'START';
+var leftOldState = 'START'
 
-var rightState = 'BEGIN';
-var rightOldState = 'BEGIN'
+var rightState = 'START';
+var rightOldState = 'START'
 
 var stateChange = (side, newState) => {
     if(side === 'left') {
-        leftOldState = state;
+        leftOldState = leftState;
         leftState = newState;
     }
     
     if(side === 'right') {
-        rightOldState = state;
+        rightOldState = rightState;
         rightState = newState;
     }
 }
