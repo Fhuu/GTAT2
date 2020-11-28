@@ -426,8 +426,9 @@ var reset = () => {
 //=========================PHYSICS FUNCTION=============================//
 var moveBall = () => {
 
-    if(leftState === 'LAUNCH') {
 
+    if(leftState === 'LAUNCH' || leftState === 'ONAIR') {
+        
     }
 
 }
@@ -446,9 +447,9 @@ var isOnFloor = () => {
 
 var countTime = (frameRate, leftIsMaxed, rightIsMaxed) => {
     if(leftOldState === 'PRELAUNCH' && leftState === 'LAUNCH') {
-        if(leftIsGettingInSlope && !leftIsGettingOutSlope) leftGravityTime += 1/frameRate;
-        if(!leftIsGettingInSlope) leftTotalTime += 1 / frameRate;
-        if(leftIsGettingOutSlope) leftOutSlopeTime += 1/frameRate; 
+        if(leftState === 'ONSLOPE' && leftOldState === 'ONFLOOR') leftGravityTime += 1/frameRate;
+        if(leftState === 'ONAIR') leftTotalTime += 1 / frameRate;
+        if(leftState === 'ONFLOOR' && leftOldState === 'ONSLOPE') leftOutSlopeTime += 1/frameRate; 
     }
 
     if(rightOldState === 'RELEASE' && rightState === 'PRELAUNCH') {
