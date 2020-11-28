@@ -425,7 +425,15 @@ var moveBall = () => {
 }
 
 var isOnFloor = () => {
-    
+    if(leftBallMovement.y + leftBallStartPoint.y < 0) {
+        leftBallMovement.y = -leftBallStartPoint.y;
+        stateChange('left', 'ONFLOOR');
+    }
+
+    if(leftBallMovement.y + leftBallStartPoint.y < 0) {
+        leftBallMovement.y = -leftBallStartPoint.y;
+        stateChange('left', 'ONFLOOR');
+    }
 }
 
 var countTime = (frameRate, leftIsMaxed, rightIsMaxed) => {
