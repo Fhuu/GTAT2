@@ -40,6 +40,8 @@ var angleLeft, angleRight; //ANGLE FOR WIPPE
 var seesawHalfLength;
 
 //BALL VARIABLE
+var ballDiameter;
+var ballSlopeDiff;
 var ballPositionToSeesaw;
 var leftBallStartPoint, rightBallStartPoint;
 
@@ -49,15 +51,23 @@ var leftIsOnFloor, rightIsOnFloor;
 var leftIsReleased, rightIsReleased;
 var leftIsMaxed, rightIsMaxed;
 var leftIsLaunched, rightIsLaunched;
+var leftIsGettingInSlope, rightIsGettingInSlope;
+var leftIsGettingOutSlope, rightIsGettingOutSlope;
 
 var leftStartY, rightStartY;
 var leftControl, rightControl; //POSITION OF DRAG CIRCLE
 var rightBallMovement, leftBallMovement; //FOR BALL MOVEMENT
+var leftNormalMovement, rightNormalMovement;
+var leftSlopeMovement, rightSlopeMovement;
+var leftSlopeMovementOut, rightSlopeMovementOut;
 
 //=====================PHYSICS VARIABLE=========================//
 var gravity;
 var leftTotalTime, rightTotalTime;
+var leftGravityTime, rightGravityTime;
+var leftOutSlopeTime, rightOutSlopeTime;
 var maxV0, leftV0, rightV0;
+var leftMaxHeight, rightMaxHeight;
 
 var movingAngle;
 
@@ -69,7 +79,7 @@ function setup() {
     rY = -rX;  //To invert the - to bottom and + to top need to add - for the ratio
 
     centerX = windowWidth / 2;
-    centerY = windowHeight - (0.2 * windowHeight);
+    centerY = windowHeight - (0.05 * windowHeight);
 
     frmRate = 60;
     frameRate(frmRate);
@@ -90,6 +100,8 @@ function setup() {
     seesawHalfLength = 125;
 
     //BALL VARIABLE
+    ballDiameter = 32;
+    ballSlopeDiff = ballDiameter * Math.sin(maxAlpha / 2);
     ballPositionToSeesaw = 6.5 / 10;
     leftBallStartPoint = createVector(-triCenter - seesawHalfLength * ballPositionToSeesaw * Math.cos(angleLeft), (triHeight - 16) + Math.sin(angleLeft) * seesawHalfLength * ballPositionToSeesaw);    
     rightBallStartPoint = createVector(triCenter + seesawHalfLength * ballPositionToSeesaw * Math.cos(angleRight), (triHeight - 16) + Math.sin(angleRight) * seesawHalfLength * ballPositionToSeesaw);
@@ -107,6 +119,10 @@ function setup() {
     rightIsMaxed = false;
     leftIsLaunched = false;
     rightIsLaunched = false;
+    leftIsGettingOutSlope = false;
+    leftIsGettingInSlope = false;
+    rightIsGettingOutSlope = false;
+    rightIsGettingInSlope = false;
 
     //THE DEFAULT POSITION OF DRAG CIRCLE, IT TAKES THE ANGLE IN CONSIDERATION FOR THE STARTING POINT
     leftControl = createVector(0, 0);
@@ -114,12 +130,24 @@ function setup() {
     //DEFAULT BALL MOVEMENT IS SET TO 0, THEY ARE NOT MOVING AT ALL IN INITIAL STATE
     leftBallMovement = createVector(0, 0);
     rightBallMovement = createVector(0, 0);    
+    leftNormalMovement = createVector(0, 0);
+    rightNormalMovement = createVector(0, 0);
+    leftSlopeMovement = createVector(0, 0);
+    rightSlopeMovement = createVector(0, 0);
+    leftSlopeMovementOut = createVector(0, 0);
+    rightSlopeMovementOut = createVector(0, 0);
 
 
     //=======PHYSICS SETUP========//
     gravity = 9.8 * 20;
     leftTotalTime = 0;
     rightTotalTime = 0;
+    leftGravityTime = 0;
+    rightGravityTime = 0;
+    leftOutSlopeTime = 0;
+    rightOutSlopeTime = 0;
+    leftMaxHeight = 0;
+    rightMaxHeight = 0;
 
     maxV0 = 35 * 20;
     leftV0 = 0;
@@ -165,7 +193,7 @@ function draw() {
     push();
     fill(0);
     textSize(40);
-    text("Diro Baloska S0566367 21.11.2020", 400, 50);
+    text("Diro Baloska S0566367 23.11.2020", 400, 50);
     pop();
 
 
@@ -178,7 +206,7 @@ function draw() {
 
         translate(centerX, centerY);
         fill(color(255,0,0));
-        circle(0,0, 32 * rY);
+        circle(0,0, ballDiameter * rY);
 
         //FLOOR
         line(-centerX, -16 * rY, centerX, -16 * rY);
@@ -210,7 +238,7 @@ function draw() {
         push();
             fill(color(0,255,0));
             translate((leftBallStartPoint.x + leftBallMovement.x) * rX, (leftBallStartPoint.y + leftBallMovement.y) * rY);
-            circle(0, 0, 32 * rX);
+            circle(0, 0, ballDiameter * rX);
         pop();
 
         //==================================RIGHT SYSTEM===========================//
@@ -240,7 +268,7 @@ function draw() {
         push();
             fill(color(0,0,255));
             translate((rightBallStartPoint.x + rightBallMovement.x) * rX, (rightBallStartPoint.y + rightBallMovement.y) * rY);
-            circle(0, 0, 32 * rX);
+            circle(0, 0, ballDiameter * rX);
         pop();
 
         //
@@ -252,8 +280,8 @@ function draw() {
     checkLimit();
     moveSeesaw();
     moveBall();
-    isOnFloor();
     horizontalLimit();
+    isOnSeesaw();
 }
 
 
@@ -291,43 +319,42 @@ function mouseReleased() {
 //WHETHER THE MOUSE IS OVER DRAG CIRCLE OR NOT
 var isMouseOver = () => {
     let dLeft = dist(centerX + (-triCenter - seesawHalfLength * Math.cos(angleLeft)) * rX, centerY + ((triHeight - 16) + seesawHalfLength * Math.sin(angleLeft))  * rY, mouseX, mouseY);
-    if(dLeft < 32 * rX) {
+    if(dLeft < ballDiameter * rX) {
         leftIsHovering = false;
     } else {
         leftIsHovering = true;
     }
 
     let dRight = dist(centerX + (triCenter + seesawHalfLength * Math.cos(angleRight)) * rX, centerY + ((triHeight - 16) + seesawHalfLength * Math.sin(angleRight))  * rY, mouseX, mouseY);
-    if(dRight < 32 * rX) {
+    if(dRight < ballDiameter * rX) {
         rightIsHovering = false;
     } else {
         rightIsHovering = true;
     }
 }
 
-var isOnFloor = () => {
-    if(leftBallStartPoint.y + leftBallMovement.y < 0) {
-        leftBallMovement.y = -leftBallStartPoint.y;    
-        leftIsOnFloor = true;
-    }
-    if(rightBallStartPoint.y + rightBallMovement.y < 0) {
-        rightBallMovement.y = -rightBallStartPoint.y;
-        rightIsOnFloor = true;
-    }
-}
-
 var horizontalLimit = () => {
     // leftBallMovement.x += 10;
     // rightBallMovement.x -= 10;
-    // console.log(centerX + 600);
-    // console.log(leftBallStartPoint.x + leftBallMovement.x);
     if(leftBallMovement.x > -leftBallStartPoint.x + centerX / rX - 16) {
         leftBallMovement.x = -leftBallStartPoint.x + centerX / rX - 16;
         if(leftIsOnFloor) leftV0 = 0;
     }
 
-    if(rightBallMovement.x < -rightBallStartPoint.x -centerX / rX + 16) 
+    if(leftBallMovement.x < -leftBallStartPoint.x - centerX / rX + 16) {
+        leftBallMovement.x = -leftBallStartPoint.x - centerX / rX + 16;
+        if(leftIsOnFloor) leftV0 = 0;
+    }
+
+    if(rightBallMovement.x < -rightBallStartPoint.x -centerX / rX + 16) {
         rightBallMovement.x = -rightBallStartPoint.x -centerX / rX + 16;
+        if(rightIsOnFloor) rightV0 = 0;
+    }
+
+    if(rightBallMovement.x > - rightBallStartPoint.x + centerX / rX - 16) {
+        rightBallMovement.x = - rightBallStartPoint.x + centerX / rX - 16;
+        if(rightIsOnFloor) rightV0 = 0;
+    }
     
 }
 
@@ -372,31 +399,95 @@ var reset = () => {
     rightIsLaunched = false;
     leftV0 = 0;
     rightV0 = 0;
+    leftIsGettingInSlope = false;
+    rightIsGettingInSlope = false;
+    leftIsGettingOutSlope = false;
+    rightIsGettingOutSlope = false;
+    leftNormalMovement = createVector(0,0);
+    rightNormalMovement = createVector(0,0);
+    leftSlopeMovement = createVector(0, 0);
+    rightSlopeMovement = createVector(0,0);
+    leftSlopeMovementOut = createVector(0,0);
+    rightSlopeMovementOut = createVector(0,0);
+    leftTotalTime = 0;
+    rightTotalTime = 0;
+    leftGravityTime = 0;
+    rightGravityTime = 0;
+    leftOutSlopeTime = 0;
+    rightOutSlopeTime = 0;
+    leftMaxHeight = 0;
+    rightMaxHeight = 0;
 }
 
 //=========================PHYSICS FUNCTION=============================//
 var moveBall = () => {
     
+    
+    let leftv0BeforeSeesaw = leftV0 * Math.sin(maxAlpha);
+    let rightv0BeforeSeesaw = -rightV0 * Math.sin(maxAlpha);
 
-    if(leftIsMaxed && leftV0 !== 0) {
+    if(leftIsMaxed && leftV0 !== 0 && !leftIsGettingInSlope && !leftIsGettingOutSlope) {
         leftIsLaunched = true;
-        console.log(leftTotalTime);
-        leftBallMovement.x = leftV0 * Math.sin(maxAlpha) * leftTotalTime;
-        leftBallMovement.y = leftV0 * Math.cos(maxAlpha) * leftTotalTime - (gravity * leftTotalTime * leftTotalTime) / 2;
+        leftNormalMovement.x = leftv0BeforeSeesaw * leftTotalTime;
+        leftNormalMovement.y = leftV0 * Math.cos(maxAlpha) * leftTotalTime - (gravity * leftTotalTime * leftTotalTime) / 2;
     }
 
-    if(rightIsMaxed && rightV0 !== 0) {
+    if(rightIsMaxed && rightV0 !== 0 && !rightIsGettingInSlope && !rightIsGettingOutSlope) {
         rightIsLaunched = true;
-        rightBallMovement.x = -rightV0 * Math.sin(maxAlpha) * rightTotalTime;
-        rightBallMovement.y = rightV0 * Math.cos(maxAlpha) * rightTotalTime - (gravity * rightTotalTime * rightTotalTime) / 2;
+        rightNormalMovement.x = rightv0BeforeSeesaw * rightTotalTime;
+        rightNormalMovement.y = rightV0 * Math.cos(maxAlpha) * rightTotalTime - (gravity * rightTotalTime * rightTotalTime) / 2;
     }
     
+    if(leftIsMaxed && leftV0 !== 0 && leftIsGettingInSlope && leftIsOnFloor) {
+        leftSlopeMovement.x = leftv0BeforeSeesaw * Math.cos(maxAlpha) * leftGravityTime - gravity * Math.cos(maxAlpha) * leftGravityTime * leftGravityTime / 2;
+        leftSlopeMovement.y = leftv0BeforeSeesaw * Math.sin(maxAlpha) * leftGravityTime - gravity * Math.sin(maxAlpha) * leftGravityTime * leftGravityTime / 2;
+        if(leftSlopeMovement.y > leftMaxHeight) leftMaxHeight = leftSlopeMovement.y;
+    }
 
+    if(rightIsMaxed && rightV0 !== 0 && rightIsGettingInSlope && rightIsOnFloor) {
+        rightSlopeMovement.x = rightv0BeforeSeesaw * Math.cos(maxAlpha) * rightGravityTime + gravity * Math.cos(maxAlpha) * rightGravityTime * rightGravityTime / 2;
+        rightSlopeMovement.y = -rightv0BeforeSeesaw * Math.sin(maxAlpha) * rightGravityTime - gravity * Math.sin(maxAlpha) * rightGravityTime * rightGravityTime / 2;
+        if(Math.abs(rightSlopeMovement.y) > rightMaxHeight) rightMaxHeight = Math.abs(rightSlopeMovement.y);
+    }
+    
+    if(leftIsMaxed && leftV0 !== 0 && leftIsGettingOutSlope) {
+        leftSlopeMovementOut.x = Math.sqrt(2 * gravity * leftMaxHeight) * leftOutSlopeTime;
+    }
+
+    if(rightIsMaxed && rightV0 !== 0 && rightIsGettingOutSlope) {
+        rightSlopeMovementOut.x = Math.sqrt(2 * gravity * rightMaxHeight) * rightOutSlopeTime;
+    }
+
+    //IS ON FLOOR
+    if(leftNormalMovement.y + leftBallStartPoint.y < 0) {
+        leftNormalMovement.y = -leftBallStartPoint.y;
+        leftIsOnFloor = true;
+    }
+    
+    if(rightNormalMovement.y + rightBallStartPoint.y < 0) {
+        rightNormalMovement.y = -rightBallStartPoint.y;
+        rightIsOnFloor = true;
+    }
+
+    leftBallMovement.x = leftNormalMovement.x + leftSlopeMovement.x - leftSlopeMovementOut.x;
+    leftBallMovement.y = leftNormalMovement.y + leftSlopeMovement.y;
+
+    rightBallMovement.x = rightNormalMovement.x + rightSlopeMovement.x + rightSlopeMovementOut.x;
+    rightBallMovement.y = rightNormalMovement.y + rightSlopeMovement.y;
 }
 
 var countTime = (frameRate, leftIsMaxed, rightIsMaxed) => {
-    if(!leftIsPulled && leftV0 !== 0 && leftIsMaxed) leftTotalTime += 1 / frameRate;
-    if(!rightIsPulled && rightV0 !== 0 && rightIsMaxed) rightTotalTime += 1 / frameRate;
+    if(!leftIsPulled && leftV0 !== 0 && leftIsMaxed) {
+        if(leftIsGettingInSlope && !leftIsGettingOutSlope) leftGravityTime += 1/frameRate;
+        if(!leftIsGettingInSlope) leftTotalTime += 1 / frameRate;
+        if(leftIsGettingOutSlope) leftOutSlopeTime += 1/frameRate; 
+    }
+
+    if(!rightIsPulled && rightV0 !== 0 && rightIsMaxed) {
+        if(rightIsGettingInSlope && !rightIsGettingOutSlope) rightGravityTime += 1/frameRate;
+        if(!rightIsGettingInSlope) rightTotalTime += 1 / frameRate;
+        if(rightIsGettingOutSlope) rightOutSlopeTime += 1/frameRate;
+    }
 }
 
 var isMaxed = () => {
@@ -427,4 +518,25 @@ var moveSeesaw = () => {
     if(angleRight < maxAlpha && rightIsReleased) {
         angleRight += rightV0 * (1 / 60) / seesawHalfLength * rX;
     }
+}
+
+var isOnSeesaw = () => {
+    let seesawArea = Math.cos(maxAlpha) * seesawHalfLength;
+
+    if(leftBallStartPoint.x + leftBallMovement.x > 600 - seesawArea - ballSlopeDiff && leftBallStartPoint.x + leftBallMovement.x < 600 + seesawArea) {
+        leftIsGettingInSlope = true;
+    }
+    else leftIsGettingInSlope = false; 
+
+    if(leftSlopeMovement.x < 0) {
+        leftIsGettingOutSlope = true;
+    } else leftIsGettingOutSlope = false;
+
+    if(rightBallStartPoint.x + rightBallMovement.x < -600 + seesawArea + ballSlopeDiff && rightBallStartPoint.x + rightBallMovement.x > -600 - seesawArea) {
+        rightIsGettingInSlope = true
+    } else rightIsGettingInSlope = false;
+    
+    if(rightSlopeMovement.x > 0) {
+        rightIsGettingOutSlope = true;
+    } else  rightIsGettingOutSlope = false;
 }
