@@ -430,7 +430,6 @@ var moveBall = () => {
 
     let leftV0Sin = leftV0 * Math.sin(maxAlpha);    
     if(leftState === 'LAUNCH' || leftState === 'ONAIR') {
-        console.log(leftTotalTime);
         leftBallMovement.x = leftV0Sin * leftTotalTime;
         leftBallMovement.y = leftV0 * Math.cos(maxAlpha) * leftTotalTime - (gravity * leftTotalTime * leftTotalTime) / 2;
         stateChange('left', 'ONAIR');
@@ -444,6 +443,15 @@ var moveBall = () => {
         leftBallMovement.x -= leftSlopeMovement.x;
         leftBallMovement.y -= leftSlopeMovement.y;
 
+        leftSlopeMovement.x = leftV0Sin * Math.cos(maxAlpha) * leftGravityTime - gravity * Math.cos(maxAlpha) * leftGravityTime * leftGravityTime / 2;
+        leftSlopeMovement.y = leftV0Sin * Math.sin(maxAlpha) * leftGravityTime - gravity * Math.sin(maxAlpha) * leftGravityTime * leftGravityTime / 2;
+        
+        leftBallMovement.x += leftSlopeMovement.x;
+        leftBallMovement.y += leftSlopeMovement.y;
+    }
+
+    if(leftState === 'ONFLOOR' && leftOldState === 'ONSLOPE') {
+        
     }
 
 }
