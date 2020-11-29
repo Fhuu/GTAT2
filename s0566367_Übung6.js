@@ -428,9 +428,15 @@ var moveBall = () => {
 
     if(leftIsMaxed && leftV0 !== 0 && !leftIsGettingInSlope && !leftIsGettingOutSlope) {
         leftIsLaunched = true;
-        leftNormalMovement.x = leftv0BeforeSeesaw * leftTotalTime;
-        leftNormalMovement.y = leftV0 * Math.cos(maxAlpha) * leftTotalTime - (gravity * leftTotalTime * leftTotalTime) / 2;
+        leftBallMovement.x += leftv0BeforeSeesaw * 1 / 60;
+        leftBallMovement.y += (leftV0 * Math.cos(maxAlpha) - (gravity * leftTotalTime)) / 60;
     }
+
+    /**
+     * dt = 1/240
+     * t += dt;
+     *      s = v sinß t     =>  snew = sold + (v - (g t)) dt
+     */
 
     if(rightIsMaxed && rightV0 !== 0 && !rightIsGettingInSlope && !rightIsGettingOutSlope) {
         rightIsLaunched = true;
@@ -439,9 +445,13 @@ var moveBall = () => {
     }
     
     if(leftIsMaxed && leftV0 !== 0 && leftIsGettingInSlope && leftIsOnFloor) {
-        leftSlopeMovement.x = leftv0BeforeSeesaw * Math.cos(maxAlpha) * leftGravityTime - gravity * Math.cos(maxAlpha) * leftGravityTime * leftGravityTime / 2;
-        leftSlopeMovement.y = leftv0BeforeSeesaw * Math.sin(maxAlpha) * leftGravityTime - gravity * Math.sin(maxAlpha) * leftGravityTime * leftGravityTime / 2;
-        if(leftSlopeMovement.y > leftMaxHeight) leftMaxHeight = leftSlopeMovement.y;
+        leftBallMovement.x += (leftv0BeforeSeesaw * Math.cos(maxAlpha) - (gravity * Math.cos(maxAlpha) * leftGravityTime)) / 60;
+        //s.x = v cosß t - g cosß t² / 2
+        leftBallMovement.y += (leftv0BeforeSeesaw * Math.sin(maxAlpha) - (gravity * Math.sin(maxAlpha) * leftGravityTime)) / 60;
+        //s.y = v sinß t - g sinß t² / 2
+
+        let temp = leftv0BeforeSeesaw * Math.sin(maxAlpha) * leftGravityTime - (gravity * Math.sin(maxAlpha) * leftGravityTime * leftGravityTime) / 2;
+        if(temp > leftMaxHeight) leftMaxHeight = temp;
     }
 
     if(rightIsMaxed && rightV0 !== 0 && rightIsGettingInSlope && rightIsOnFloor) {
@@ -451,16 +461,19 @@ var moveBall = () => {
     }
     
     if(leftIsMaxed && leftV0 !== 0 && leftIsGettingOutSlope) {
-        leftSlopeMovementOut.x = Math.sqrt(2 * gravity * leftMaxHeight) * leftOutSlopeTime;
+        // leftSlopeMovementOut.x = Math.sqrt(2 * gravity * leftMaxHeight) * leftOutSlopeTime;
+        leftSlopeMovementOut.x += Math.sqrt(2 * gravity * leftMaxHeight) / 60;
     }
+    //+ }
 
+//+ 
     if(rightIsMaxed && rightV0 !== 0 && rightIsGettingOutSlope) {
         rightSlopeMovementOut.x = Math.sqrt(2 * gravity * rightMaxHeight) * rightOutSlopeTime;
     }
 
     //IS ON FLOOR
-    if(leftNormalMovement.y + leftBallStartPoint.y < 0) {
-        leftNormalMovement.y = -leftBallStartPoint.y;
+    if(leftBallMovement.y + leftBallStartPoint.y < 0) {
+        leftBallMovement.y = -leftBallStartPoint.y;
         leftIsOnFloor = true;
     }
     
@@ -469,8 +482,8 @@ var moveBall = () => {
         rightIsOnFloor = true;
     }
 
-    leftBallMovement.x = leftNormalMovement.x + leftSlopeMovement.x - leftSlopeMovementOut.x;
-    leftBallMovement.y = leftNormalMovement.y + leftSlopeMovement.y;
+    // leftBallMovement.x = leftNormalMovement.x + leftSlopeMovement.x - leftSlopeMovementOut.x;
+    // leftBallMovement.y = leftNormalMovement.y + leftSlopeMovement.y;
 
     rightBallMovement.x = rightNormalMovement.x + rightSlopeMovement.x + rightSlopeMovementOut.x;
     rightBallMovement.y = rightNormalMovement.y + rightSlopeMovement.y;
