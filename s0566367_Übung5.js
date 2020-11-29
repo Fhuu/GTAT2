@@ -440,7 +440,7 @@ var moveBall = () => {
 
     if(leftState === 'ONFLOOR') {
         // if(leftOldState === 'ONSLOPE') console.log('This should run');
-        console.log(leftV0);
+        if(leftV0 !== 0) console.log(leftV0);
         leftBallMovement.x += leftV0Sin / 60;
 
         
@@ -465,7 +465,7 @@ var moveBall = () => {
         leftBallMovement.y += leftSlopeMovement.y;
 
         if(leftSlopeMovement.y > leftMaxHeight) leftMaxHeight = leftSlopeMovement.y;
-        if(leftSlopeMovement.y < 0) {
+        if(leftSlopeMovement.y <= 0) {
             stateChange('left', 'ONFLOOR');
         }
     }
@@ -481,19 +481,13 @@ var moveBall = () => {
         leftBallMovement.y += leftOwnSlopeMovement.y;
 
         if(leftOwnSlopeMovement.y > leftMaxHeight) leftMaxHeight = leftOwnSlopeMovement.y;
-        if(leftOwnSlopeMovement.y  < 0) {
+        if(leftOwnSlopeMovement.y  <= 0) {
             stateChange('left', 'ONFLOOR');
         }
     }
 
-    if(leftState === 'ONFLOOR' && leftOldState === 'ONOWNSLOPE') {
-        console.log('ownslope')
-        leftV0 = Math.sqrt(Math.abs(2 * gravity * leftMaxHeight)) / Math.sin(maxAlpha);
-    }
 
-
-
-    let rightV0Sin = -rightV0 * Math.sin(maxAlpha);    
+    let rightV0Sin = -rightV0 * Math.sin(maxAlpha);
     if(rightState === 'LAUNCH' || rightState === 'ONAIR') {
         rightBallMovement.x = rightV0Sin * rightTotalTime;
         rightBallMovement.y = rightV0 * Math.cos(maxAlpha) * rightTotalTime - (gravity * rightTotalTime * rightTotalTime) / 2;
@@ -502,7 +496,7 @@ var moveBall = () => {
 
     if(rightState === 'ONFLOOR') {
         // if(rightOldState === 'ONSLOPE') console.log('This should run');
-        console.log(rightV0);
+        if(rightV0 !== 0) console.log(rightV0);
         rightBallMovement.x += rightV0Sin / 60;
 
         
@@ -516,44 +510,37 @@ var moveBall = () => {
         rightMaxHeight = 0;
     }
 
-    //TODO: FIX ON SLOPE RIGHT SYSTEM
     if(rightState === 'ONSLOPE') {
         rightBallMovement.x -= rightSlopeMovement.x;
         rightBallMovement.y -= rightSlopeMovement.y;
 
-        rightSlopeMovement.x = rightV0Sin * Math.cos(maxAlpha) * rightGravityTime - gravity * Math.cos(maxAlpha) * rightGravityTime * rightGravityTime / 2;
-        rightSlopeMovement.y = rightV0Sin * Math.sin(maxAlpha) * rightGravityTime - gravity * Math.sin(maxAlpha) * rightGravityTime * rightGravityTime / 2;
+        rightSlopeMovement.x = rightV0Sin * Math.cos(maxAlpha) * rightGravityTime + gravity * Math.cos(maxAlpha) * rightGravityTime * rightGravityTime / 2;
+        rightSlopeMovement.y = -rightV0Sin * Math.sin(maxAlpha) * rightGravityTime - gravity * Math.sin(maxAlpha) * rightGravityTime * rightGravityTime / 2;
         
         rightBallMovement.x += rightSlopeMovement.x;
         rightBallMovement.y += rightSlopeMovement.y;
 
         if(rightSlopeMovement.y > rightMaxHeight) rightMaxHeight = rightSlopeMovement.y;
-        if(rightSlopeMovement.y < 0) {
+        if(rightSlopeMovement.y <= 0) {
             stateChange('right', 'ONFLOOR');
         }
     }
 
-    if(leftState === 'ONOWNSLOPE' && leftOldState === 'ONFLOOR') {
-        leftBallMovement.x -= leftOwnSlopeMovement.x;
-        leftBallMovement.y -= leftOwnSlopeMovement.y;
+    if(rightState === 'ONOWNSLOPE' && rightOldState === 'ONFLOOR') {
+        rightBallMovement.x -= rightOwnSlopeMovement.x;
+        rightBallMovement.y -= rightOwnSlopeMovement.y;
 
-        leftOwnSlopeMovement.x = leftV0Sin * Math.cos(maxAlpha) * leftGravityTime + gravity * Math.cos(maxAlpha) * leftGravityTime * leftGravityTime / 2;
-        leftOwnSlopeMovement.y = -leftV0Sin * Math.sin(maxAlpha) * leftGravityTime - gravity * Math.sin(maxAlpha) * leftGravityTime * leftGravityTime / 2;
+        rightOwnSlopeMovement.x = rightV0Sin * Math.cos(maxAlpha) * rightGravityTime - gravity * Math.cos(maxAlpha) * rightGravityTime * rightGravityTime / 2;
+        rightOwnSlopeMovement.y = rightV0Sin * Math.sin(maxAlpha) * rightGravityTime - gravity * Math.sin(maxAlpha) * rightGravityTime * rightGravityTime / 2;
         
-        leftBallMovement.x += leftOwnSlopeMovement.x;
-        leftBallMovement.y += leftOwnSlopeMovement.y;
+        rightBallMovement.x += rightOwnSlopeMovement.x;
+        rightBallMovement.y += rightOwnSlopeMovement.y;
 
-        if(leftOwnSlopeMovement.y > leftMaxHeight) leftMaxHeight = leftOwnSlopeMovement.y;
-        if(leftOwnSlopeMovement.y  < 0) {
-            stateChange('left', 'ONFLOOR');
+        if(rightOwnSlopeMovement.y > rightMaxHeight) rightMaxHeight = rightOwnSlopeMovement.y;
+        if(rightOwnSlopeMovement.y  <= 0) {
+            stateChange('right', 'ONFLOOR');
         }
     }
-
-    if(leftState === 'ONFLOOR' && leftOldState === 'ONOWNSLOPE') {
-        console.log('ownslope')
-        leftV0 = Math.sqrt(Math.abs(2 * gravity * leftMaxHeight)) / Math.sin(maxAlpha);
-    }
-
 }
 
 var isOnFloor = () => {
@@ -577,7 +564,10 @@ var countTime = (frameRate, leftIsMaxed, rightIsMaxed) => {
 
     if(rightState === 'LAUNCH' || rightState === 'ONAIR' || (rightState === 'ONFLOOR' && rightOldState !== 'ONOWNSLOPE')) rightTotalTime += 1 / frameRate;
 
-    if(rightState === 'ONSLOPE' || rightState === 'ONOWNSLOPE') rightGravityTime += 1 / 60;
+    if(rightState === 'ONSLOPE' || rightState === 'ONOWNSLOPE') {
+        console.log('this should run');
+        rightGravityTime += 1 / 60;
+    }
 }
 
 var isMaxed = () => {
@@ -606,7 +596,7 @@ var isOnSeesaw = () => {
         stateChange('left', 'ONSLOPE');
     }
 
-    if(leftBallMovement.x < Math.cos(maxAlpha) * (seesawHalfLength + (6.5 / 10) * seesawHalfLength) + ballSlopeDiff && leftState === 'ONFLOOR') {
+    if(leftBallMovement.x < Math.cos(maxAlpha) * (seesawHalfLength + (6.5 / 10) * seesawHalfLength) - ballSlopeDiff && leftState === 'ONFLOOR') {
         stateChange('left', 'ONOWNSLOPE')
     }
 
@@ -614,7 +604,7 @@ var isOnSeesaw = () => {
         stateChange('right', 'ONSLOPE')
     }
 
-    if(rightBallMovement > Math.cos(maxAlpha) * (-seesawHalfLength - (6.5 / 10) * seesawHalfLength) + ballSlopeDiff && rightState === 'ONFLOOR') stateChange('right', 'ONOWNSLOPE');
+    if(Math.abs(rightBallMovement.x) <= Math.cos(maxAlpha) * (seesawHalfLength + (6.5 / 10) * seesawHalfLength) - ballSlopeDiff && rightState === 'ONFLOOR') stateChange('right', 'ONOWNSLOPE');
 }
 
 
@@ -646,12 +636,14 @@ var stateChange = (side, newState) => {
         leftOldState = leftState;
         leftState = newState;
 
-        if(newState === 'ONFLOOR' && leftState === 'ONSLOPE') {
+        if(leftState === 'ONFLOOR' && leftOldState === 'ONSLOPE') {
             leftV0 = -1 * Math.sqrt(Math.abs(2 * gravity * leftMaxHeight)) / Math.sin(maxAlpha);
+            console.log(leftV0)
         }
     
-        if(newState === 'ONFLOOR' && leftState === 'ONOWNSLOPE') {
+        if(leftState === 'ONFLOOR' && leftOldState === 'ONOWNSLOPE') {
             leftV0 = Math.sqrt(Math.abs(2 * gravity * leftMaxHeight)) / Math.sin(maxAlpha);
+            console.log(leftV0);
         }
     }
 
@@ -660,12 +652,12 @@ var stateChange = (side, newState) => {
         rightOldState = rightState;
         rightState = newState;
 
-        if(newState === 'ONFLOOR' && rightState === 'ONSLOPE') {
-            rightV0 = Math.sqrt(Math.abs(2 * gravity * rightMaxHeight)) / Math.sin(maxAlpha);
+        if(rightState === 'ONFLOOR' && rightOldState === 'ONSLOPE') {
+            rightV0 = -1 * Math.sqrt(Math.abs(2 * gravity * rightMaxHeight)) / Math.sin(maxAlpha);
         }
 
-        if(newState === 'ONFLOOR' && rightState === 'ONOWNSLOPE') {
-            rightV0 = -1 * Math.sqrt(Math.abs(2 * gravity * rightMaxHeight)) / Math.sin(maxAlpha);
+        if(rightState === 'ONFLOOR' && rightOldState === 'ONOWNSLOPE') {
+            rightV0 = Math.sqrt(Math.abs(2 * gravity * rightMaxHeight)) / Math.sin(maxAlpha);
         }
     }
 }
