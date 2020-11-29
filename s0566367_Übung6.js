@@ -45,31 +45,19 @@ var ballSlopeDiff;
 var ballPositionToSeesaw;
 var leftBallStartPoint, rightBallStartPoint;
 
-var leftIsPulled, rightIsPulled;
-var leftIsHovering, rightIsHovering; //VISIBILITY OF DRAG CIRCLE
-var leftIsOnFloor, rightIsOnFloor;
-var leftIsReleased, rightIsReleased;
-var leftIsMaxed, rightIsMaxed;
-var leftIsLaunched, rightIsLaunched;
-var leftIsGettingInSlope, rightIsGettingInSlope;
-var leftIsGettingOutSlope, rightIsGettingOutSlope;
-
 var leftStartY, rightStartY;
 var leftControl, rightControl; //POSITION OF DRAG CIRCLE
 var rightBallMovement, leftBallMovement; //FOR BALL MOVEMENT
 var leftNormalMovement, rightNormalMovement;
 var leftSlopeMovement, rightSlopeMovement;
-var leftSlopeMovementOut, rightSlopeMovementOut;
+var leftOwnSlopeMovement, rightOwnSlopeMovement;
 
 //=====================PHYSICS VARIABLE=========================//
 var gravity;
 var leftTotalTime, rightTotalTime;
 var leftGravityTime, rightGravityTime;
-var leftOutSlopeTime, rightOutSlopeTime;
 var maxV0, leftV0, rightV0;
 var leftMaxHeight, rightMaxHeight;
-
-var movingAngle;
 
 function setup() {
     canvas = createCanvas(windowWidth, windowHeight);
@@ -106,24 +94,6 @@ function setup() {
     leftBallStartPoint = createVector(-triCenter - seesawHalfLength * ballPositionToSeesaw * Math.cos(angleLeft), (triHeight - 16) + Math.sin(angleLeft) * seesawHalfLength * ballPositionToSeesaw);    
     rightBallStartPoint = createVector(triCenter + seesawHalfLength * ballPositionToSeesaw * Math.cos(angleRight), (triHeight - 16) + Math.sin(angleRight) * seesawHalfLength * ballPositionToSeesaw);
     
-    //STATES
-    leftIsPulled = false;
-    rightIsPulled = false;
-    leftIsHovering = true;
-    rightIsHovering = true;
-    leftIsOnFloor = false;
-    rightIsOnFloor = false;
-    leftIsReleased = false;
-    rightIsReleased = false;
-    leftIsMaxed = false;
-    rightIsMaxed = false;
-    leftIsLaunched = false;
-    rightIsLaunched = false;
-    leftIsGettingOutSlope = false;
-    leftIsGettingInSlope = false;
-    rightIsGettingOutSlope = false;
-    rightIsGettingInSlope = false;
-
     //THE DEFAULT POSITION OF DRAG CIRCLE, IT TAKES THE ANGLE IN CONSIDERATION FOR THE STARTING POINT
     leftControl = createVector(0, 0);
     rightControl = createVector(0, 0);
@@ -133,10 +103,9 @@ function setup() {
     leftNormalMovement = createVector(0, 0);
     rightNormalMovement = createVector(0, 0);
     leftSlopeMovement = createVector(0, 0);
+    leftOwnSlopeMovement = createVector(0,0);
     rightSlopeMovement = createVector(0, 0);
-    leftSlopeMovementOut = createVector(0, 0);
-    rightSlopeMovementOut = createVector(0, 0);
-
+    rightOwnSlopeMovement = createVector(0,0);
 
     //=======PHYSICS SETUP========//
     gravity = 9.8 * 20;
@@ -144,8 +113,6 @@ function setup() {
     rightTotalTime = 0;
     leftGravityTime = 0;
     rightGravityTime = 0;
-    leftOutSlopeTime = 0;
-    rightOutSlopeTime = 0;
     leftMaxHeight = 0;
     rightMaxHeight = 0;
 
@@ -227,7 +194,7 @@ function draw() {
         pop();
         push();
             fill(color('#00000000'));
-            if(leftIsHovering) 
+            if(leftState !== 'HOVER' && leftState !== 'PULL') 
             stroke(color(0,0,0));
             else
             stroke(color(0,0,0,0));
@@ -257,7 +224,7 @@ function draw() {
         pop();
         push();
             fill(color('#00000000'));
-            if(rightIsHovering) 
+            if(rightState !== 'HOVER' && rightState !== 'PULL') 
             stroke(color(0,0,0));
             else
             stroke(color(0,0,0,0));
@@ -275,13 +242,16 @@ function draw() {
     pop();    
 
     //=================================Physics====================================//
-    isMaxed();
-    countTime(frmRate, leftIsMaxed, rightIsMaxed);
     checkLimit();
+    isOnFloor();
+    isMaxed();
+    countTime(frmRate);
     moveSeesaw();
     moveBall();
     horizontalLimit();
     isOnSeesaw();
+
+    console.log(rightOldState, ' => ', rightState);
 }
 
 
@@ -298,38 +268,40 @@ var changeBallAngle = () => {
 //IF VISIBILITY IS TRUE, MOUSE IS OVER THE CIRCLE
 //WHICH MEANS THE CIRCLE CAN BE DRAGGED
 function mouseDragged() {
-    if(!leftIsHovering) {
+    if(leftState === 'HOVER' || leftState === 'PULL') {
         angleLeft = Math.atan((mouseY - centerY + 16) / seesawHalfLength) / rY;  
-        if(!leftIsLaunched) leftV0 = maxV0 / (2 * maxAlpha) * Math.abs(angleLeft - maxAlpha);
-        leftIsPulled = true;
+        if(leftState !== 'LAUNCH') leftV0 = maxV0 / (2 * maxAlpha) * Math.abs(angleLeft - maxAlpha);
+        stateChange('left', 'PULL');
     } 
 
-    if(!rightIsHovering) {
+    if(rightState === 'HOVER' || rightState === 'PULL') {
         angleRight = Math.atan((mouseY - centerY + 16) / seesawHalfLength) / rY;  
-        if(!rightIsLaunched) rightV0 = maxV0 / (2 * maxAlpha) * Math.abs(angleRight - maxAlpha);
-        rightIsPulled = true;
+        if(rightState !== 'LAUNCH') rightV0 = maxV0 / (2 * maxAlpha) * Math.abs(angleRight - maxAlpha);
+        stateChange('right', 'PULL');
     } 
 }
 
 function mouseReleased() {
-    if(!leftIsHovering) leftIsReleased = true;
-    if(!rightIsHovering) rightIsReleased = true;
+    if(leftState === 'PULL') stateChange('left', 'RELEASE');
+    if(rightState === 'PULL') stateChange('right', 'RELEASE');
 }
 
 //WHETHER THE MOUSE IS OVER DRAG CIRCLE OR NOT
 var isMouseOver = () => {
     let dLeft = dist(centerX + (-triCenter - seesawHalfLength * Math.cos(angleLeft)) * rX, centerY + ((triHeight - 16) + seesawHalfLength * Math.sin(angleLeft))  * rY, mouseX, mouseY);
-    if(dLeft < ballDiameter * rX) {
-        leftIsHovering = false;
+    if(dLeft < ballDiameter * rX && (leftState === 'START' || leftState === 'BEGIN' || leftState === 'HOVER')) {
+        stateChange('left', 'HOVER');
     } else {
-        leftIsHovering = true;
+        if(leftState === 'HOVER') {
+            stateChange('left', 'BEGIN');
+        }
     }
 
     let dRight = dist(centerX + (triCenter + seesawHalfLength * Math.cos(angleRight)) * rX, centerY + ((triHeight - 16) + seesawHalfLength * Math.sin(angleRight))  * rY, mouseX, mouseY);
-    if(dRight < ballDiameter * rX) {
-        rightIsHovering = false;
+    if(dRight < ballDiameter * rX && (rightState === 'START' || rightState === 'BEGIN' || rightState === 'HOVER')) {
+        stateChange('right', 'HOVER');
     } else {
-        rightIsHovering = true;
+        if(rightState === 'HOVER') stateChange('right', 'BEGIN');
     }
 }
 
@@ -421,114 +393,162 @@ var reset = () => {
 
 //=========================PHYSICS FUNCTION=============================//
 var moveBall = () => {
-    
-    
-    let leftv0BeforeSeesaw = leftV0 * Math.sin(maxAlpha);
-    let rightv0BeforeSeesaw = -rightV0 * Math.sin(maxAlpha);
 
-    if(leftIsMaxed && leftV0 !== 0 && !leftIsGettingInSlope && !leftIsGettingOutSlope) {
-        leftIsLaunched = true;
-        leftBallMovement.x += leftv0BeforeSeesaw * 1 / 60;
+
+    let leftV0Sin = leftV0 * Math.sin(maxAlpha);    
+    if(leftState === 'LAUNCH' || leftState === 'ONAIR') {
+        leftBallMovement.x += leftV0Sin / 60;
         leftBallMovement.y += (leftV0 * Math.cos(maxAlpha) - (gravity * leftTotalTime)) / 60;
+        stateChange('left', 'ONAIR');
     }
 
-    /**
-     * dt = 1/240
-     * t += dt;
-     *      s = v sinß t     =>  snew = sold + (v - (g t)) dt
-     */
+    if(leftState === 'ONFLOOR') {
+        // if(leftOldState === 'ONSLOPE') console.log('This should run');
+        if(leftV0 !== 0) console.log(leftV0);
+        leftBallMovement.x += leftV0Sin / 60;
 
-    if(rightIsMaxed && rightV0 !== 0 && !rightIsGettingInSlope && !rightIsGettingOutSlope) {
-        rightIsLaunched = true;
-        rightNormalMovement.x = rightv0BeforeSeesaw * rightTotalTime;
-        rightNormalMovement.y = rightV0 * Math.cos(maxAlpha) * rightTotalTime - (gravity * rightTotalTime * rightTotalTime) / 2;
-    }
-    
-    if(leftIsMaxed && leftV0 !== 0 && leftIsGettingInSlope && leftIsOnFloor) {
-        leftBallMovement.x += (leftv0BeforeSeesaw * Math.cos(maxAlpha) - (gravity * Math.cos(maxAlpha) * leftGravityTime)) / 60;
-        //s.x = v cosß t - g cosß t² / 2
-        leftBallMovement.y += (leftv0BeforeSeesaw * Math.sin(maxAlpha) - (gravity * Math.sin(maxAlpha) * leftGravityTime)) / 60;
-        //s.y = v sinß t - g sinß t² / 2
+        
+        leftSlopeMovement.x = 0;
+        leftSlopeMovement.y = 0;
+        
+        leftOwnSlopeMovement.x = 0;
+        leftOwnSlopeMovement.y = 0;
 
-        let temp = leftv0BeforeSeesaw * Math.sin(maxAlpha) * leftGravityTime - (gravity * Math.sin(maxAlpha) * leftGravityTime * leftGravityTime) / 2;
-        if(temp > leftMaxHeight) leftMaxHeight = temp;
+        leftGravityTime = 0;
+        leftMaxHeight = 0;
     }
 
-    if(rightIsMaxed && rightV0 !== 0 && rightIsGettingInSlope && rightIsOnFloor) {
-        rightSlopeMovement.x = rightv0BeforeSeesaw * Math.cos(maxAlpha) * rightGravityTime + gravity * Math.cos(maxAlpha) * rightGravityTime * rightGravityTime / 2;
-        rightSlopeMovement.y = -rightv0BeforeSeesaw * Math.sin(maxAlpha) * rightGravityTime - gravity * Math.sin(maxAlpha) * rightGravityTime * rightGravityTime / 2;
-        if(Math.abs(rightSlopeMovement.y) > rightMaxHeight) rightMaxHeight = Math.abs(rightSlopeMovement.y);
-    }
-    
-    if(leftIsMaxed && leftV0 !== 0 && leftIsGettingOutSlope) {
-        // leftSlopeMovementOut.x = Math.sqrt(2 * gravity * leftMaxHeight) * leftOutSlopeTime;
-        leftSlopeMovementOut.x += Math.sqrt(2 * gravity * leftMaxHeight) / 60;
-    }
-    //+ }
+    if(leftState === 'ONSLOPE') {
+        leftBallMovement.x -= leftSlopeMovement.x;
+        leftBallMovement.y -= leftSlopeMovement.y;
+        
+        leftSlopeMovement.x += (leftV0Sin * Math.cos(maxAlpha) - (gravity * Math.cos(maxAlpha) * leftGravityTime)) / 60;
+        leftSlopeMovement.y += (leftV0Sin * Math.sin(maxAlpha) - (gravity * Math.sin(maxAlpha) * leftGravityTime)) / 60;
 
-//+ 
-    if(rightIsMaxed && rightV0 !== 0 && rightIsGettingOutSlope) {
-        rightSlopeMovementOut.x = Math.sqrt(2 * gravity * rightMaxHeight) * rightOutSlopeTime;
-    }
-
-    //IS ON FLOOR
-    if(leftBallMovement.y + leftBallStartPoint.y < 0) {
-        leftBallMovement.y = -leftBallStartPoint.y;
-        leftIsOnFloor = true;
-    }
-    
-    if(rightNormalMovement.y + rightBallStartPoint.y < 0) {
-        rightNormalMovement.y = -rightBallStartPoint.y;
-        rightIsOnFloor = true;
+        leftBallMovement.x += leftSlopeMovement.x;
+        leftBallMovement.y += leftSlopeMovement.y;
+  
+        if(leftSlopeMovement.y > leftMaxHeight) leftMaxHeight = leftSlopeMovement.y;
+        if(leftSlopeMovement.y <= 0) {
+            stateChange('left', 'ONFLOOR');
+        }
     }
 
-    // leftBallMovement.x = leftNormalMovement.x + leftSlopeMovement.x - leftSlopeMovementOut.x;
-    // leftBallMovement.y = leftNormalMovement.y + leftSlopeMovement.y;
+    if(leftState === 'ONOWNSLOPE' && leftOldState === 'ONFLOOR') {
+        leftBallMovement.x -= leftOwnSlopeMovement.x;
+        leftBallMovement.y -= leftOwnSlopeMovement.y;
+        
+        leftOwnSlopeMovement.x += (leftV0Sin * Math.cos(maxAlpha) + (gravity * Math.cos(maxAlpha) * leftGravityTime)) / 60;
+        leftOwnSlopeMovement.y += (-leftV0Sin * Math.sin(maxAlpha) - (gravity * Math.sin(maxAlpha) * leftGravityTime)) / 60;
 
-    rightBallMovement.x = rightNormalMovement.x + rightSlopeMovement.x + rightSlopeMovementOut.x;
-    rightBallMovement.y = rightNormalMovement.y + rightSlopeMovement.y;
+        leftBallMovement.x += leftOwnSlopeMovement.x;
+        leftBallMovement.y += leftOwnSlopeMovement.y;
+        
+        if(leftOwnSlopeMovement.y > leftMaxHeight) leftMaxHeight = leftOwnSlopeMovement.y;
+        if(leftOwnSlopeMovement.y  <= 0) {
+            stateChange('left', 'ONFLOOR');
+        }
+    }
+
+
+    let rightV0Sin = -rightV0 * Math.sin(maxAlpha);
+    if(rightState === 'LAUNCH' || rightState === 'ONAIR') {
+        rightBallMovement.x += rightV0Sin / 60;
+        rightBallMovement.y += (rightV0 * Math.cos(maxAlpha) - (gravity * rightTotalTime)) / 60;
+        stateChange('right', 'ONAIR');
+    }
+
+    if(rightState === 'ONFLOOR') {
+        // if(rightOldState === 'ONSLOPE') console.log('This should run');
+        if(rightV0 !== 0) console.log(rightV0);
+        rightBallMovement.x += rightV0Sin / 60;
+
+        
+        rightSlopeMovement.x = 0;
+        rightSlopeMovement.y = 0;
+        
+        rightOwnSlopeMovement.x = 0;
+        rightOwnSlopeMovement.y = 0;
+
+        rightGravityTime = 0;
+        rightMaxHeight = 0;
+    }
+
+    if(rightState === 'ONSLOPE') {
+        rightBallMovement.x -= rightSlopeMovement.x;
+        rightBallMovement.y -= rightSlopeMovement.y;
+
+        rightSlopeMovement.x += (rightV0Sin * Math.cos(maxAlpha) + (gravity * Math.cos(maxAlpha) * rightGravityTime)) / 60;
+        rightSlopeMovement.y += (-rightV0Sin * Math.sin(maxAlpha) - (gravity * Math.sin(maxAlpha) * rightGravityTime)) / 60;
+        
+        rightBallMovement.x += rightSlopeMovement.x;
+        rightBallMovement.y += rightSlopeMovement.y;
+
+        if(rightSlopeMovement.y > rightMaxHeight) rightMaxHeight = rightSlopeMovement.y;
+        if(rightSlopeMovement.y <= 0) {
+            stateChange('right', 'ONFLOOR');
+        }
+    }
+
+    if(rightState === 'ONOWNSLOPE' && rightOldState === 'ONFLOOR') {
+        rightBallMovement.x -= rightOwnSlopeMovement.x;
+        rightBallMovement.y -= rightOwnSlopeMovement.y;
+
+        rightOwnSlopeMovement.x += (rightV0Sin * Math.cos(maxAlpha) - (gravity * Math.cos(maxAlpha) * rightGravityTime)) / 60;
+        rightOwnSlopeMovement.y += (rightV0Sin * Math.sin(maxAlpha) - (gravity * Math.sin(maxAlpha) * rightGravityTime)) / 60;
+        
+        rightBallMovement.x += rightOwnSlopeMovement.x;
+        rightBallMovement.y += rightOwnSlopeMovement.y;
+
+        if(rightOwnSlopeMovement.y > rightMaxHeight) rightMaxHeight = rightOwnSlopeMovement.y;
+        if(rightOwnSlopeMovement.y  <= 0) {
+            stateChange('right', 'ONFLOOR');
+        }
+    }
 }
 
-var countTime = (frameRate, leftIsMaxed, rightIsMaxed) => {
-    if(!leftIsPulled && leftV0 !== 0 && leftIsMaxed) {
-        if(leftIsGettingInSlope && !leftIsGettingOutSlope) leftGravityTime += 1/frameRate;
-        if(!leftIsGettingInSlope) leftTotalTime += 1 / frameRate;
-        if(leftIsGettingOutSlope) leftOutSlopeTime += 1/frameRate; 
+var isOnFloor = () => {
+    if(leftBallMovement.y + leftBallStartPoint.y < 0) {
+        leftBallMovement.y = -leftBallStartPoint.y;
+        stateChange('left', 'ONFLOOR');
     }
 
-    if(!rightIsPulled && rightV0 !== 0 && rightIsMaxed) {
-        if(rightIsGettingInSlope && !rightIsGettingOutSlope) rightGravityTime += 1/frameRate;
-        if(!rightIsGettingInSlope) rightTotalTime += 1 / frameRate;
-        if(rightIsGettingOutSlope) rightOutSlopeTime += 1/frameRate;
+    if(rightBallMovement.y + rightBallStartPoint.y < 0) {
+        rightBallMovement.y = -rightBallStartPoint.y;
+        stateChange('right', 'ONFLOOR');
+    }
+}
+
+var countTime = (frameRate) => {
+    if(leftState === 'LAUNCH' || leftState === 'ONAIR' || (leftState === 'ONFLOOR' && leftOldState !== 'ONSLOPE')) {
+        leftTotalTime += 1 / frameRate;
+    }
+
+    if(leftState === 'ONSLOPE' || leftState === 'ONOWNSLOPE') leftGravityTime += 1 / 60;
+
+    if(rightState === 'LAUNCH' || rightState === 'ONAIR' || (rightState === 'ONFLOOR' && rightOldState !== 'ONOWNSLOPE')) rightTotalTime += 1 / frameRate;
+
+    if(rightState === 'ONSLOPE' || rightState === 'ONOWNSLOPE') {
+        console.log('this should run');
+        rightGravityTime += 1 / 60;
     }
 }
 
 var isMaxed = () => {
-    if(angleLeft === maxAlpha) {
-        leftIsMaxed = true;
-        leftIsReleased = false;
-        leftIsPulled = false;
-    } else{
-        leftIsMaxed = false;
-
-    } 
-
-    if(angleRight === maxAlpha) {
-        rightIsMaxed = true;
-        rightIsReleased = false;
-        rightIsPulled = false;
+    if(angleLeft === maxAlpha && leftOldState === 'PULL' && leftState === 'RELEASE') {
+        stateChange('left', 'LAUNCH');
     }
-    else {
-        rightIsMaxed = false;
 
-    } 
+    if(angleRight === maxAlpha && rightOldState === 'PULL' && rightState === 'RELEASE') {
+        stateChange('right', 'LAUNCH');
+    }
 }
 
 var moveSeesaw = () => {
-    if(angleLeft < maxAlpha && leftIsReleased) {
+    if(leftState === 'RELEASE' && leftOldState === 'PULL') {
         angleLeft += leftV0 * (1 / 60) / seesawHalfLength * rX;
     }
-    if(angleRight < maxAlpha && rightIsReleased) {
+    if(rightState === 'RELEASE' && rightOldState === 'PULL') {
         angleRight += rightV0 * (1 / 60) / seesawHalfLength * rX;
     }
 }
@@ -537,19 +557,71 @@ var isOnSeesaw = () => {
     let seesawArea = Math.cos(maxAlpha) * seesawHalfLength;
 
     if(leftBallStartPoint.x + leftBallMovement.x > 600 - seesawArea - ballSlopeDiff && leftBallStartPoint.x + leftBallMovement.x < 600 + seesawArea) {
-        leftIsGettingInSlope = true;
+        stateChange('left', 'ONSLOPE');
     }
-    else leftIsGettingInSlope = false; 
 
-    if(leftSlopeMovement.x < 0) {
-        leftIsGettingOutSlope = true;
-    } else leftIsGettingOutSlope = false;
+    if(leftBallMovement.x < Math.cos(maxAlpha) * (seesawHalfLength + (6.5 / 10) * seesawHalfLength) - ballSlopeDiff && leftState === 'ONFLOOR') {
+        stateChange('left', 'ONOWNSLOPE')
+    }
 
     if(rightBallStartPoint.x + rightBallMovement.x < -600 + seesawArea + ballSlopeDiff && rightBallStartPoint.x + rightBallMovement.x > -600 - seesawArea) {
-        rightIsGettingInSlope = true
-    } else rightIsGettingInSlope = false;
+        stateChange('right', 'ONSLOPE')
+    }
+
+    if(Math.abs(rightBallMovement.x) <= Math.cos(maxAlpha) * (seesawHalfLength + (6.5 / 10) * seesawHalfLength) - ballSlopeDiff && rightState === 'ONFLOOR') stateChange('right', 'ONOWNSLOPE');
+}
+
+
+// var states = [
+//     'BEGIN',
+//     'START',
+//     'HOVER',
+//     'PULL',
+//     'RELEASE',
+//     'PRELAUNCH',
+//     'LAUNCH',
+//     'ONAIR',
+//     'ONFLOOR',
+//     'ONSLOPE',
+//     'ONOWNSLOPE'
+// ]
+
+var leftState = 'START';
+var leftOldState = 'START'
+
+var rightState = 'START';
+var rightOldState = 'START'
+
+var stateChange = (side, newState) => {
+
     
-    if(rightSlopeMovement.x > 0) {
-        rightIsGettingOutSlope = true;
-    } else  rightIsGettingOutSlope = false;
+
+    if(side === 'left') {
+        leftOldState = leftState;
+        leftState = newState;
+
+        if(leftState === 'ONFLOOR' && leftOldState === 'ONSLOPE') {
+            leftV0 = -1 * Math.sqrt(Math.abs(2 * gravity * leftMaxHeight)) / Math.sin(maxAlpha);
+            console.log(leftV0)
+        }
+    
+        if(leftState === 'ONFLOOR' && leftOldState === 'ONOWNSLOPE') {
+            leftV0 = Math.sqrt(Math.abs(2 * gravity * leftMaxHeight)) / Math.sin(maxAlpha);
+            console.log(leftV0);
+        }
+    }
+
+    
+    if(side === 'right') {
+        rightOldState = rightState;
+        rightState = newState;
+
+        if(rightState === 'ONFLOOR' && rightOldState === 'ONSLOPE') {
+            rightV0 = -1 * Math.sqrt(Math.abs(2 * gravity * rightMaxHeight)) / Math.sin(maxAlpha);
+        }
+
+        if(rightState === 'ONFLOOR' && rightOldState === 'ONOWNSLOPE') {
+            rightV0 = Math.sqrt(Math.abs(2 * gravity * rightMaxHeight)) / Math.sin(maxAlpha);
+        }
+    }
 }
