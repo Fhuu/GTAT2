@@ -397,8 +397,8 @@ var moveBall = () => {
 
     let leftV0Sin = leftV0 * Math.sin(maxAlpha);    
     if(leftState === 'LAUNCH' || leftState === 'ONAIR') {
-        leftBallMovement.x = leftV0Sin * leftTotalTime;
-        leftBallMovement.y = leftV0 * Math.cos(maxAlpha) * leftTotalTime - (gravity * leftTotalTime * leftTotalTime) / 2;
+        leftBallMovement.x += leftV0Sin / 60;
+        leftBallMovement.y += (leftV0 * Math.cos(maxAlpha) - (gravity * leftTotalTime)) / 60;
         stateChange('left', 'ONAIR');
     }
 
@@ -421,13 +421,13 @@ var moveBall = () => {
     if(leftState === 'ONSLOPE') {
         leftBallMovement.x -= leftSlopeMovement.x;
         leftBallMovement.y -= leftSlopeMovement.y;
-
-        leftSlopeMovement.x = leftV0Sin * Math.cos(maxAlpha) * leftGravityTime - gravity * Math.cos(maxAlpha) * leftGravityTime * leftGravityTime / 2;
-        leftSlopeMovement.y = leftV0Sin * Math.sin(maxAlpha) * leftGravityTime - gravity * Math.sin(maxAlpha) * leftGravityTime * leftGravityTime / 2;
         
+        leftSlopeMovement.x += (leftV0Sin * Math.cos(maxAlpha) - (gravity * Math.cos(maxAlpha) * leftGravityTime)) / 60;
+        leftSlopeMovement.y += (leftV0Sin * Math.sin(maxAlpha) - (gravity * Math.sin(maxAlpha) * leftGravityTime)) / 60;
+
         leftBallMovement.x += leftSlopeMovement.x;
         leftBallMovement.y += leftSlopeMovement.y;
-
+  
         if(leftSlopeMovement.y > leftMaxHeight) leftMaxHeight = leftSlopeMovement.y;
         if(leftSlopeMovement.y <= 0) {
             stateChange('left', 'ONFLOOR');
@@ -437,13 +437,13 @@ var moveBall = () => {
     if(leftState === 'ONOWNSLOPE' && leftOldState === 'ONFLOOR') {
         leftBallMovement.x -= leftOwnSlopeMovement.x;
         leftBallMovement.y -= leftOwnSlopeMovement.y;
-
-        leftOwnSlopeMovement.x = leftV0Sin * Math.cos(maxAlpha) * leftGravityTime + gravity * Math.cos(maxAlpha) * leftGravityTime * leftGravityTime / 2;
-        leftOwnSlopeMovement.y = -leftV0Sin * Math.sin(maxAlpha) * leftGravityTime - gravity * Math.sin(maxAlpha) * leftGravityTime * leftGravityTime / 2;
         
+        leftOwnSlopeMovement.x += (leftV0Sin * Math.cos(maxAlpha) + (gravity * Math.cos(maxAlpha) * leftGravityTime)) / 60;
+        leftOwnSlopeMovement.y += (-leftV0Sin * Math.sin(maxAlpha) - (gravity * Math.sin(maxAlpha) * leftGravityTime)) / 60;
+
         leftBallMovement.x += leftOwnSlopeMovement.x;
         leftBallMovement.y += leftOwnSlopeMovement.y;
-
+        
         if(leftOwnSlopeMovement.y > leftMaxHeight) leftMaxHeight = leftOwnSlopeMovement.y;
         if(leftOwnSlopeMovement.y  <= 0) {
             stateChange('left', 'ONFLOOR');
@@ -453,8 +453,8 @@ var moveBall = () => {
 
     let rightV0Sin = -rightV0 * Math.sin(maxAlpha);
     if(rightState === 'LAUNCH' || rightState === 'ONAIR') {
-        rightBallMovement.x = rightV0Sin * rightTotalTime;
-        rightBallMovement.y = rightV0 * Math.cos(maxAlpha) * rightTotalTime - (gravity * rightTotalTime * rightTotalTime) / 2;
+        rightBallMovement.x += rightV0Sin / 60;
+        rightBallMovement.y += (rightV0 * Math.cos(maxAlpha) - (gravity * rightTotalTime)) / 60;
         stateChange('right', 'ONAIR');
     }
 
@@ -478,8 +478,8 @@ var moveBall = () => {
         rightBallMovement.x -= rightSlopeMovement.x;
         rightBallMovement.y -= rightSlopeMovement.y;
 
-        rightSlopeMovement.x = rightV0Sin * Math.cos(maxAlpha) * rightGravityTime + gravity * Math.cos(maxAlpha) * rightGravityTime * rightGravityTime / 2;
-        rightSlopeMovement.y = -rightV0Sin * Math.sin(maxAlpha) * rightGravityTime - gravity * Math.sin(maxAlpha) * rightGravityTime * rightGravityTime / 2;
+        rightSlopeMovement.x += (rightV0Sin * Math.cos(maxAlpha) + (gravity * Math.cos(maxAlpha) * rightGravityTime)) / 60;
+        rightSlopeMovement.y += (-rightV0Sin * Math.sin(maxAlpha) - (gravity * Math.sin(maxAlpha) * rightGravityTime)) / 60;
         
         rightBallMovement.x += rightSlopeMovement.x;
         rightBallMovement.y += rightSlopeMovement.y;
@@ -494,8 +494,8 @@ var moveBall = () => {
         rightBallMovement.x -= rightOwnSlopeMovement.x;
         rightBallMovement.y -= rightOwnSlopeMovement.y;
 
-        rightOwnSlopeMovement.x = rightV0Sin * Math.cos(maxAlpha) * rightGravityTime - gravity * Math.cos(maxAlpha) * rightGravityTime * rightGravityTime / 2;
-        rightOwnSlopeMovement.y = rightV0Sin * Math.sin(maxAlpha) * rightGravityTime - gravity * Math.sin(maxAlpha) * rightGravityTime * rightGravityTime / 2;
+        rightOwnSlopeMovement.x += (rightV0Sin * Math.cos(maxAlpha) - (gravity * Math.cos(maxAlpha) * rightGravityTime)) / 60;
+        rightOwnSlopeMovement.y += (rightV0Sin * Math.sin(maxAlpha) - (gravity * Math.sin(maxAlpha) * rightGravityTime)) / 60;
         
         rightBallMovement.x += rightOwnSlopeMovement.x;
         rightBallMovement.y += rightOwnSlopeMovement.y;
