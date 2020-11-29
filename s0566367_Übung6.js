@@ -3,7 +3,7 @@
 /* Autor:  Diro Baloska s0566367                  */
 /*                                                */
 /* p5.js Template                                 */
-/* Stand: 08.11.2020                              */
+/* Stand: 29.11.2020                              */
 /*                                                */
 /**************************************************/
 
@@ -160,7 +160,7 @@ function draw() {
     push();
     fill(0);
     textSize(40);
-    text("Diro Baloska S0566367 23.11.2020", 400, 50);
+    text("Diro Baloska S0566367 29.11.2020", 400, 50);
     pop();
 
 
