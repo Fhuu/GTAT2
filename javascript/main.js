@@ -18,6 +18,9 @@ var centerY;    //0 Punk des Kartesisches Systems in Y Achse
 var canvas;
 var canvasID = 'pTest'; // ist eine Variable!!!
 var resetButton;
+var windToggle;
+var toggle;
+var velocitySlider;
 
 //==VARIABLES==
 var g;
@@ -38,6 +41,7 @@ var rightAngle;
 
 //Objects
 var left, right;
+var testBall;
 //=============
 
 
@@ -59,6 +63,14 @@ function setup() {
     resetButton = createButton('Start/Reset');
     resetButton.position(100, 30);
     resetButton.mousePressed(setVariable);
+
+    toggle = true;
+
+    windToggle = createButton('Wind On/Off');
+    windToggle.position(100, 60);
+    windToggle.mousePressed(toggleWind);
+
+    velocitySlider = createSlider(0, 1, 1, 0.4);
 }
 
 function draw() {
@@ -75,6 +87,7 @@ function draw() {
 
     left.drawSystem();
     right.drawSystem();
+    testBall.draw();
 
 
     checkLimit();
@@ -94,4 +107,14 @@ function mouseReleased() {
 
     leftAngle = aMax;
     rightAngle = -aMax;
+}
+
+function toggleWind() {
+    toggle = !toggle;
+    if(toggle) {
+        let vorzeichen = Math.random() < 0.5 ? -1 : 1;
+        air = Math.round(Math.random() * 21 * vorzeichen);
+    } else {
+        air = 0;
+    }
 }

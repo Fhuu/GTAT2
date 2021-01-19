@@ -19,6 +19,8 @@ function setVariable() {
     leftAngle = aMax;
     rightAngle = -aMax;
 
+    testBall = new TestBall(0,centerY / 2 / rX, d, m, vMax, 0);
+
     left = new System('left');
     right = new System('right');
 }
