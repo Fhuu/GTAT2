@@ -3,7 +3,7 @@
 /* Autor:  Diro Baloska s0566367                  */
 /*                                                */
 /* p5.js Template                                 */
-/* Stand: 30.12.2020                              */
+/* Stand: 31.12.2020                              */
 /*                                                */
 /**************************************************/
 /* Variablendeklaration */
@@ -21,6 +21,10 @@ var resetButton;
 
 //==VARIABLES==
 var g;
+var luftDichte;
+var m;
+var cw;
+var air;
 var vMax;
 var d;
 var r;
@@ -90,6 +94,4 @@ function mouseReleased() {
 
     leftAngle = aMax;
     rightAngle = -aMax;
-
-    console.log(left.v, left.state, right.v, right.state);
 }

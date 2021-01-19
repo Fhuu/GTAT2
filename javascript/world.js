@@ -49,6 +49,11 @@ function makeText() {
     push();
         fill(0);
         textSize(40);
-        text("Diro Baloska S0566367 30.12.2020", 400, 50);
+        text("Diro Baloska S0566367 31.12.2020", 400, 50);
+        if(air < 0) {
+            text("Luft: <<< " + Math.abs(air) + "km/h", 400, 100);
+        } else {
+            text("Luft: >>> " + Math.abs(air) + "km/h", 400, 100);
+        }
     pop();
 }
