@@ -21,6 +21,7 @@ var resetButton;
 var windToggle;
 var toggle;
 var velocitySlider;
+var angleSlider;
 
 //==VARIABLES==
 var g;
@@ -70,7 +71,7 @@ function setup() {
     windToggle.position(100, 60);
     windToggle.mousePressed(toggleWind);
 
-    velocitySlider = createSlider(0, 1, 1, 0.4);
+    sliders();
 }
 
 function draw() {
@@ -84,6 +85,8 @@ function draw() {
     
         
     initiateWorld();
+    sliderText();
+    directionText();
 
     left.drawSystem();
     right.drawSystem();
@@ -98,6 +101,16 @@ function mouseDragged() {
         left.control.mouseControl();
     if(right.control.isHovering(rightAngle) && right.state === 'START')
         right.control.mouseControl();
+
+    
+}
+
+function mousePressed() {
+    if(testBall.state === 'POSITION') {
+        testBall.x = (mouseX - centerX) / rX;
+        testBall.y = (mouseY - centerY) / rY;
+        // console.log((centerX - mouseX) * rX, (centerY - mouseY) * rY);
+    }
 }
 
 function mouseReleased() {
@@ -118,3 +131,10 @@ function toggleWind() {
         air = 0;
     }
 }
+
+function keyTyped() {
+    if(keyCode === ENTER) {
+        testBall.stateChange();
+    }
+}
+

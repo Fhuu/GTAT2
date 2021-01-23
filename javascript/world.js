@@ -61,3 +61,29 @@ function makeText() {
         }
     pop();
 }
+
+function sliders () {
+    velocitySlider = createSlider(0, 1, 1, 0.1);
+    velocitySlider.position(500, 150);
+    angleSlider = createSlider(-Math.PI, Math.PI, 0, 0.001);
+    angleSlider.position(500,200);
+}
+
+function sliderText() {
+    push();
+        textSize(20);
+        text('Velocity: ' + velocitySlider.value() + ' * 3500', 500, 140);
+        text('Angle: ' + Math.round(angleSlider.value() * 180 / Math.PI), 500, 190);
+    pop();
+}
+
+function directionText() {
+    push();
+        textSize(15);
+        fill(color('#000000'));
+        text('Press ENTER key to go through the states.', 25, 130);
+        text('- POSITION > position the ball with mouse click', 25, 150);
+        text('- SET > set the velocity and angle', 25, 170);
+        text('- MOVE > start the ball movement with given velocity and angle', 25, 190);
+    pop();
+}
