@@ -20,6 +20,7 @@ function setVariable() {
     rightAngle = -aMax;
 
     testBall = new TestBall(0,centerY / 2 / rX, d, m, vMax, 0);
+    middleBall = new MiddleBall(0, 0, d, m);
 
     left = new System('left');
     right = new System('right');

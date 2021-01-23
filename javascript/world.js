@@ -2,7 +2,6 @@
 
 function initiateWorld() {
     drawFloor();
-    drawMiddleBall();
     drawTriangle();
     makeText();
 }
@@ -11,15 +10,6 @@ function drawFloor() {
     push();
         translate(centerX, centerY);
         line(-centerX, -16 * rY, centerX, -16 * rY);
-    pop();
-}
-
-
-function drawMiddleBall() {
-    push();
-        translate(centerX, centerY);
-        fill(color(255,0,0));
-        circle(0,0, d * rY);
     pop();
 }
 

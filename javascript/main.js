@@ -43,6 +43,7 @@ var rightAngle;
 //Objects
 var left, right;
 var testBall;
+var middleBall;
 //=============
 
 
@@ -91,6 +92,7 @@ function draw() {
     left.drawSystem();
     right.drawSystem();
     testBall.draw();
+    middleBall.draw();
 
 
     checkLimit();
