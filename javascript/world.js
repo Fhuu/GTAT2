@@ -63,9 +63,9 @@ function makeText() {
 }
 
 function sliders () {
-    velocitySlider = createSlider(0, 1, 1, 0.1);
+    velocitySlider = createSlider(0, 1, 1, 0.01);
     velocitySlider.position(500, 150);
-    angleSlider = createSlider(-Math.PI, Math.PI, 0, 0.001);
+    angleSlider = createSlider(-Math.PI, Math.PI, 0, 0.05);
     angleSlider.position(500,200);
 }
 
