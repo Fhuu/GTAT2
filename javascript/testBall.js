@@ -5,6 +5,8 @@ class TestBall{
         this.d = d;
         this.m = m;
         this.v = v;
+        this.vx = 0;
+        this.vy = 0;
         this.angle = angle;
         this.state = 'POSITION';
     }
@@ -36,6 +38,8 @@ class TestBall{
     draw() {
         this.promptState();
         switch(this.state) {
+            case 'OFF': 
+                break;
             case 'POSITION' :
                 this.drawBegin();
                 break;
@@ -44,6 +48,9 @@ class TestBall{
                 break;
             case 'MOVE' :
                 this.drawMove();
+                break;
+            case 'COLLISION' :
+                this.drawCollision();
                 break;
             default :
                 this.drawBegin();
@@ -57,6 +64,25 @@ class TestBall{
         fill(color('#000000'));
         text('Testball STATE: "' + this.state + '"', 700, 150);
         text('Velocity: ' + this.v * velocitySlider.value(), 700, 180);
+        text('VX: ' + Math.round(this.vx), 700, 210);
+        text('VY: ' + Math.round(this.vy), 700, 240);
+        text('X: ' + Math.round(this.x), 700, 270);
+        text('Y: ' + Math.round(this.y), 700, 300);
+        pop();
+    }
+    
+    drawCollision() {
+        // console.log(this.vx, this.vy);
+        this.x += this.vx * dt;
+        if(this.y > 0) {
+            this.y += this.vy * dt;
+        } else {
+            this.y = 0;
+        }
+        push();
+            translate(centerX + this.x * rX, centerY + this.y * rY);
+            fill(color('#ffffff'));
+            circle(0, 0, this.d * rX);
         pop();
     }
 
@@ -113,6 +139,11 @@ class TestBall{
                 velocitySlider.value(1);
                 angleSlider.value(0);
                 break;
+            case 'COLLISION' :
+                testBall.reset();
+                velocitySlider.value(1);
+                angleSlider.value(0);
+                break;
         }
     }
 
@@ -122,5 +153,52 @@ class TestBall{
         this.v = vMax;
         this.angle = 0;
         this.state = 'POSITION';
+    }
+
+    detectCollision() {
+        let distance = dist(this.x, this.y, middleBall.x, middleBall.y);
+        if(distance < this.d / 2 + middleBall.d / 2) {
+            if (this.state === 'MOVE') {
+                this.countCollideVelocity();
+                this.state = 'COLLISION';
+                this.v = 0;
+            }
+        }
+    }
+
+    countCollideVelocity() {
+        let alpha = this.countAlpha();
+
+        let newCoor = this.countZT(this.v * Math.cos(this.angle), this.v * Math.sin(this.angle), alpha - HALF_PI);
+        let v1T = newCoor[0];
+        let v1Z = newCoor[1];
+
+        newCoor = this.countZT(middleBall.v, 0, alpha - HALF_PI );
+        let v2T = newCoor[0];
+        let v2Z = newCoor[1];
+        console.log(newCoor);
+
+        let v1Z_ = ((this.m - middleBall.m) * v1Z + 2 * middleBall.m * v2Z) / (this.m + middleBall.m);
+        
+        newCoor = this.countZT(v1T, v1Z_, -alpha + HALF_PI);
+        this.vx = newCoor[0];
+        this.vy = newCoor[1];
+
+        let v2Z_ = ((middleBall.m - this.m) * v2Z + 2 * this.m * v1Z) / (this.m + middleBall.m);
+
+        newCoor = this.countZT(v2T, v2Z_, -alpha + HALF_PI);
+        middleBall.v = newCoor[0];
+
+        this.vy = this.vy - newCoor[1];
+    }
+
+    countAlpha() {
+        return atan2(this.y - middleBall.y, this.x - middleBall.x);
+    }
+
+    countZT(x, y, phi) {
+        var u = x * Math.cos(phi) + y * Math.sin(phi);
+        var v = -x * Math.sin(phi) + y * Math.cos(phi);
+        return [u, v];
     }
 }

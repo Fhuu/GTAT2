@@ -96,6 +96,7 @@ function draw() {
 
 
     checkLimit();
+    testBall.detectCollision();
 }
 
 function mouseDragged() {
