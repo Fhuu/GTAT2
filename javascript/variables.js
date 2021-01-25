@@ -7,7 +7,7 @@ function setVariable() {
     m = 2.5;
     cw = 0.45;
     let vorzeichen = Math.random() < 0.5 ? -1 : 1;
-    air = Math.round(Math.random() * 21 * vorzeichen);
+    air = 0;
     r = 0.03;
     vMax = 3500;
     d = 32;

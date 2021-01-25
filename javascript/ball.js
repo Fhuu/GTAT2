@@ -30,7 +30,25 @@ class Ball {
             case 'ONOWNSEESAW' : 
                 this.drawOnOwnSlopeBall(vx, t);
                 break;
+            case 'COLLISION' :
+                this.drawCollision(vx, vy);
+                break;
         }
+    }
+
+    drawCollision(vx,vy) {
+        // console.log(this.vx, this.vy);
+        this.onFloorPosition += this.vx * dt;
+        if(this.y > 0) {
+            this.y += this.vy * dt;
+        } else {
+            this.y = 0;
+        }
+        push();
+            translate(centerX + this.x * rX, centerY + this.y * rY);
+            fill(color('#ffffff'));
+            circle(0, 0, this.d * rX);
+        pop();
     }
 
     drawNormalBall() {
@@ -52,23 +70,22 @@ class Ball {
 
     drawFlyingBall(vx, vy) {
         
-        this.flyingPosition.x += vx * dt;
-        this.flyingPosition.y += vy * dt; 
+        this.positionX += this.type === 'left' ?  vx * dt : -vx * dt;
+        this.positionY += vy * dt; 
 
         push();
 
             translate(centerX, centerY);
-            translate(this.positionX * rX, (seesawHeight - d / 2) * rY);
+            translate(this.positionX * rX, (this.positionY + seesawHeight + seesawHalfLength * this.ballPosition * Math.sin(aMax)) * rY);
             
             fill(color(this.color));
+            circle(0, 0, 32 * rX);
 
-            if(this.type === 'left') {
-                translate(this.ballPositionOnSeesawEnd * rX, (d / 2 + seesawHalfLength * this.ballPosition * Math.sin(aMax)) * rY); 
-                circle(this.flyingPosition.x * rX, this.flyingPosition.y * rY, 32 * rX);
-            } else {
-                translate(this.ballPositionOnSeesawEnd * rX, (d / 2 + seesawHalfLength * this.ballPosition * Math.sin(aMax)) * rY);
-                circle(-this.flyingPosition.x * rX, this.flyingPosition.y * rY, 32 * rX);
-            }
+            // if(this.type === 'left') {
+            // } else {
+            //     translate(this.ballPositionOnSeesawEnd * rX, (d / 2 + seesawHalfLength * this.ballPosition * Math.sin(aMax)) * rY);
+            //     circle(-this.positionX * rX, this.positionY * rY, 32 * rX);
+            // }
 
         pop();
     }
@@ -79,17 +96,11 @@ class Ball {
 
     drawOnFloorBall(v) {
 
-        this.onFloorPosition += this.countFloorVector(v);
+        this.positionX += this.type === 'left' ? this.countFloorVector(v) : -this.countFloorVector(v);
 
         push();
             translate(centerX, centerY);
             translate(this.positionX * rX, 0);
-
-            translate(this.ballPositionOnSeesawEnd * rX, 0);
-            
-            this.type === 'left' ? 
-                translate(this.onFloorPosition * rX, 0) :
-                translate(-this.onFloorPosition * rX, 0);
                 
             fill(color(this.color));
             circle(0, 0, d * rX);
@@ -102,7 +113,7 @@ class Ball {
     }
 
     transferPosFlyToFloor() {
-        this.onFloorPosition = this.flyingPosition.x;
+        this.positionX += this.flyingPosition.x;
         this.flyingPosition = createVector(0,0);
     }
 
@@ -158,4 +169,6 @@ class Ball {
     resetSeesawPosition() {
         this.seesawPosition = 0;
     }
+
+    
 }

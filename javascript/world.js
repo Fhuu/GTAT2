@@ -71,9 +71,10 @@ function directionText() {
     push();
         textSize(15);
         fill(color('#000000'));
-        text('Press ENTER key to go through the states.', 25, 130);
-        text('- POSITION > position the ball with mouse click', 25, 150);
-        text('- SET > set the velocity and angle', 25, 170);
-        text('- MOVE > start the ball movement with given velocity and angle', 25, 190);
+        text('Press ENTER key to go through the states. Initial State: "OFF"', 25, 130);
+        text('- OFF > not showing the test ball', 25, 150);
+        text('- POSITION > position the ball with mouse click', 25, 170);
+        text('- SET > set the velocity and angle', 25, 190);
+        text('- MOVE > start the ball movement with given velocity and angle', 25, 210);
     pop();
 }

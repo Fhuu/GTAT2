@@ -66,7 +66,7 @@ function setup() {
     resetButton.position(100, 30);
     resetButton.mousePressed(setVariable);
 
-    toggle = true;
+    toggle = false;
 
     windToggle = createButton('Wind On/Off');
     windToggle.position(100, 60);

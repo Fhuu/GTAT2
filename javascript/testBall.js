@@ -8,7 +8,7 @@ class TestBall{
         this.vx = 0;
         this.vy = 0;
         this.angle = angle;
-        this.state = 'POSITION';
+        this.state = 'OFF';
     }
 
     setVelocityInProzent(prozent) {
@@ -36,23 +36,27 @@ class TestBall{
     }
 
     draw() {
-        this.promptState();
         switch(this.state) {
             case 'OFF': 
                 break;
             case 'POSITION' :
+                this.promptState();
                 this.drawBegin();
                 break;
             case 'SET' :
+                this.promptState();
                 this.drawBegin();
                 break;
             case 'MOVE' :
+                this.promptState();
                 this.drawMove();
                 break;
             case 'COLLISION' :
+                this.promptState();
                 this.drawCollision();
                 break;
             default :
+                this.promptState();
                 this.drawBegin();
                 break;
         }
@@ -62,12 +66,12 @@ class TestBall{
         push();
         textSize(32);
         fill(color('#000000'));
-        text('Testball STATE: "' + this.state + '"', 700, 150);
-        text('Velocity: ' + this.v * velocitySlider.value(), 700, 180);
-        text('VX: ' + Math.round(this.vx), 700, 210);
-        text('VY: ' + Math.round(this.vy), 700, 240);
-        text('X: ' + Math.round(this.x), 700, 270);
-        text('Y: ' + Math.round(this.y), 700, 300);
+        text('Testball STATE: "' + this.state + '"', 700, 180);
+        text('Velocity: ' + this.v * velocitySlider.value(), 700, 210);
+        text('VX: ' + Math.round(this.vx), 700, 240);
+        text('VY: ' + Math.round(this.vy), 700, 270);
+        text('X: ' + Math.round(this.x), 700, 300);
+        text('Y: ' + Math.round(this.y), 700, 330);
         pop();
     }
     
@@ -127,6 +131,9 @@ class TestBall{
 
     stateChange() {
         switch(this.state) {
+            case 'OFF':
+                this.state = 'POSITION';
+                break;
             case 'POSITION' : 
                 this.state = 'SET';
                 break;
@@ -152,7 +159,7 @@ class TestBall{
         this.y = centerY / 2 / rX;
         this.v = vMax;
         this.angle = 0;
-        this.state = 'POSITION';
+        this.state = 'OFF';
     }
 
     detectCollision() {

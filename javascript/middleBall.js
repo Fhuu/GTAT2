@@ -15,7 +15,7 @@ class MiddleBall {
         // this.y = this.y > 0 : this.vy * dt ?;
         textSize(32);
         fill(color('#000000'));
-        text('Middle VX: ' + Math.round(this.v), 700, 330);
+        text('Middle VX: ' + Math.round(this.v), 700, 150);
         push();
             translate(centerX , centerY );
             fill(color(this.color));
