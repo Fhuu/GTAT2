@@ -7,7 +7,6 @@ class Ball {
         this.positionX = this.type === 'left' ? -distance : distance;
         this.positionY = d / 2;
         this.color = this.type === 'left' ? '#00ff00ff' : '#0000ffff';
-        this.flyingPosition = createVector(0,0);
         this.onFloorPosition = 0;
         this.ballPositionOnSeesawEnd = this.type === 'left' ? -seesawHalfLength * this.ballPosition * Math.cos(aMax) : seesawHalfLength * this.ballPosition * Math.cos(aMax)
         this.seesawPosition = 0;
@@ -25,32 +24,17 @@ class Ball {
                 this.drawOnFloorBall(vx);
                 break;
             case 'ONSEESAW' :
-                this.drawOnSlopeBall(vx, t);
+                this.drawOnSlopeBall(vx);
                 break;
             case 'ONOWNSEESAW' : 
-                this.drawOnOwnSlopeBall(vx, t);
+                this.drawOnOwnSlopeBall(vx);
                 break;
             case 'COLLISION' :
-                this.drawCollision(vx, vy);
+                this.drawFlyingBall(vx, vy);
                 break;
         }
     }
-
-    drawCollision(vx,vy) {
-        // console.log(this.vx, this.vy);
-        this.onFloorPosition += this.vx * dt;
-        if(this.y > 0) {
-            this.y += this.vy * dt;
-        } else {
-            this.y = 0;
-        }
-        push();
-            translate(centerX + this.x * rX, centerY + this.y * rY);
-            fill(color('#ffffff'));
-            circle(0, 0, this.d * rX);
-        pop();
-    }
-
+    
     drawNormalBall() {
         push();
             translate(centerX, centerY);
@@ -81,26 +65,16 @@ class Ball {
             fill(color(this.color));
             circle(0, 0, 32 * rX);
 
-            // if(this.type === 'left') {
-            // } else {
-            //     translate(this.ballPositionOnSeesawEnd * rX, (d / 2 + seesawHalfLength * this.ballPosition * Math.sin(aMax)) * rY);
-            //     circle(-this.positionX * rX, this.positionY * rY, 32 * rX);
-            // }
-
         pop();
-    }
-
-    countXDrag(v, t) {
-        return (0.5 * Math.PI * Math.pow(d / 2, 2) * luftDichte * Math.pow(v * Math.sin(aMax) + air * 1000000 / 3600, 2)) / m;
     }
 
     drawOnFloorBall(v) {
 
         this.positionX += this.type === 'left' ? this.countFloorVector(v) : -this.countFloorVector(v);
-
+        
         push();
             translate(centerX, centerY);
-            translate(this.positionX * rX, 0);
+            translate(this.positionX * rX, this.positionY * rY);
                 
             fill(color(this.color));
             circle(0, 0, d * rX);
@@ -112,11 +86,6 @@ class Ball {
         return v * dt;
     }
 
-    transferPosFlyToFloor() {
-        this.positionX += this.flyingPosition.x;
-        this.flyingPosition = createVector(0,0);
-    }
-
     drawOnSlopeBall(v) {
 
         this.seesawPosition += this.countSeesawVector(v);
@@ -124,7 +93,6 @@ class Ball {
         push();
             translate(centerX, centerY);
             translate(this.positionX * rX, 0);
-            translate(this.ballPositionOnSeesawEnd * rX, 0);
             
             fill(color(this.color));
             if(this.type === 'left') {
@@ -147,7 +115,6 @@ class Ball {
         push();
             translate(centerX, centerY);
             translate(this.positionX * rX, 0);
-            translate(this.ballPositionOnSeesawEnd * rX, 0);
             
             fill(color(this.color));
             if(this.type === 'left') {
@@ -170,5 +137,11 @@ class Ball {
         this.seesawPosition = 0;
     }
 
-    
+    reset() {
+        this.onFloorPosition = 0;
+        this.ballPositionOnSeesawEnd = this.type === 'left' ? -seesawHalfLength * this.ballPosition * Math.cos(aMax) : seesawHalfLength * this.ballPosition * Math.cos(aMax)
+        this.seesawPosition = 0;
+        this.positionX = this.type === 'left' ? -distance : distance;
+        this.positionY = d / 2;
+    }    
 }

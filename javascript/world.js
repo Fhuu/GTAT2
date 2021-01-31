@@ -4,6 +4,8 @@ function initiateWorld() {
     drawFloor();
     drawTriangle();
     makeText();
+    ballState();
+    scoreDetector();
 }
 
 function drawFloor() {
@@ -76,5 +78,26 @@ function directionText() {
         text('- POSITION > position the ball with mouse click', 25, 170);
         text('- SET > set the velocity and angle', 25, 190);
         text('- MOVE > start the ball movement with given velocity and angle', 25, 210);
+    pop();
+}
+
+function ballState() {
+    push();
+        fill(color('#000000'));
+        text('LEFT State: ' + left.state, 1125, 100);
+        text('LEFT V: x: ' + Math.round(left.vx) + ', y: ' + Math.round(left.vy), 1125, 130);
+        text('RIGHT State: ' + right.state, 1125, 160);
+        text('RIGHT V: x: ' + Math.round(right.vx) + ', y: ' + Math.round(right.vy), 1125, 190);
+    pop();
+}
+
+function scoreDetector() {
+    push();
+        stroke(color('#ffffff'));
+        translate(centerX, centerY);
+        line(-470 * rX, -15 * rY, -420 * rX, -15 * rY);
+        line(-470 * rX, -16 * rY, -420 * rX, -16 * rY);
+        line(470 * rX, -15 * rY, 420 * rX, -15 * rY);
+        line(470 * rX, -16 * rY, 420 * rX, -16 * rY);
     pop();
 }

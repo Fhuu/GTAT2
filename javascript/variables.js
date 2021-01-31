@@ -9,7 +9,7 @@ function setVariable() {
     let vorzeichen = Math.random() < 0.5 ? -1 : 1;
     air = 0;
     r = 0.03;
-    vMax = 3500;
+    vMax = 3350;
     d = 32;
     distance = 600;
     seesawHalfLength = 125;
@@ -20,8 +20,10 @@ function setVariable() {
     rightAngle = -aMax;
 
     testBall = new TestBall(0,centerY / 2 / rX, d, m, vMax, 0);
-    middleBall = new MiddleBall(0, 0, d, m);
+    middleBall = new MiddleBall(d, m);
 
     left = new System('left');
     right = new System('right');
+
+    scoreSystem = new ScoreSystem();
 }

@@ -66,12 +66,12 @@ class TestBall{
         push();
         textSize(32);
         fill(color('#000000'));
-        text('Testball STATE: "' + this.state + '"', 700, 180);
-        text('Velocity: ' + this.v * velocitySlider.value(), 700, 210);
-        text('VX: ' + Math.round(this.vx), 700, 240);
-        text('VY: ' + Math.round(this.vy), 700, 270);
-        text('X: ' + Math.round(this.x), 700, 300);
-        text('Y: ' + Math.round(this.y), 700, 330);
+        text('Testball STATE: "' + this.state + '"', 700, 160);
+        text('Velocity: ' + this.v * velocitySlider.value(), 700, 190);
+        text('VX: ' + Math.round(this.vx), 700, 220);
+        text('VY: ' + Math.round(this.vy), 700, 250);
+        text('X: ' + Math.round(this.x), 700, 280);
+        text('Y: ' + Math.round(this.y), 700, 310);
         pop();
     }
     

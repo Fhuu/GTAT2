@@ -44,6 +44,7 @@ var rightAngle;
 var left, right;
 var testBall;
 var middleBall;
+var scoreSystem;
 //=============
 
 
@@ -93,6 +94,7 @@ function draw() {
     right.drawSystem();
     testBall.draw();
     middleBall.draw();
+    scoreSystem.draw();
 
 
     checkLimit();
@@ -140,4 +142,3 @@ function keyTyped() {
         testBall.stateChange();
     }
 }
-
