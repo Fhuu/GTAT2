@@ -169,6 +169,7 @@ class TestBall{
                 this.countCollideVelocity();
                 this.state = 'COLLISION';
                 this.v = 0;
+                middleBall.moveBall();
             }
         }
     }

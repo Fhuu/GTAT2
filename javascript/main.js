@@ -65,7 +65,7 @@ function setup() {
 
     resetButton = createButton('Start/Reset');
     resetButton.position(100, 30);
-    resetButton.mousePressed(setVariable);
+    resetButton.mousePressed(resetAll);
 
     toggle = false;
 

@@ -41,6 +41,7 @@ class System{
             this.state = 'FLY';
             this.ball.positionX = this.ball.positionX + this.ball.ballPositionOnSeesawEnd
             let v =  this.type === 'left' ? this.countVelocity(angle) : this.countVelocity(-angle);
+            if(v > vMax) v = vMax;
             this.vx = v * Math.sin(aMax);
             this.vy = v * Math.cos(aMax);
             this.type === 'left' ? right.resetSystem() : left.resetSystem();
@@ -124,7 +125,7 @@ class System{
             if(this.state === 'FLY' || this.state === 'COLLISION') {
                 let vx_ = this.vx + air;
                 let tau = m / (luftDichte * cw * Math.PI * sq(d / 2));
-                this.vx = this.vx + air + ((this.vx + air) * Math.sqrt(sq(this.vx) + sq(this.vy)) / (2 * tau)) * dt;
+                this.vx = this.vx + air - ((this.vx + air) * Math.sqrt(sq(this.vx) + sq(this.vy)) / (2 * tau)) * dt;
                 this.vy = this.vy - (this.vy * Math.sqrt(sq(vx_) + sq(this.vy)) / (2 * tau) + g) * dt;
             }
         }

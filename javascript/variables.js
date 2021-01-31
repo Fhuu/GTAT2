@@ -27,3 +27,11 @@ function setVariable() {
 
     scoreSystem = new ScoreSystem();
 }
+
+function resetAll() {
+    testBall.reset();
+    middleBall.reset();
+    left.resetSystem();
+    right.resetSystem();
+    scoreSystem.reset();
+}

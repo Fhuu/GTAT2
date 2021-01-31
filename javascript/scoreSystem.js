@@ -23,4 +23,9 @@ class ScoreSystem{
    leftWin(){
        this.leftScore++;
    }
+
+   reset() {
+       this.leftScore = 0;
+       this.rightScore = 0;
+   }
 }
