@@ -29,9 +29,6 @@ class Ball {
             case 'ONOWNSEESAW' : 
                 this.drawOnOwnSlopeBall(vx);
                 break;
-            case 'COLLISION' :
-                this.drawFlyingBall(vx, vy);
-                break;
         }
     }
     
