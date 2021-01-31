@@ -66,14 +66,6 @@ function setup() {
     resetButton = createButton('Start/Reset');
     resetButton.position(100, 30);
     resetButton.mousePressed(setVariable);
-
-    toggle = false;
-
-    windToggle = createButton('Wind On/Off');
-    windToggle.position(100, 60);
-    windToggle.mousePressed(toggleWind);
-
-    sliders();
 }
 
 function draw() {
@@ -87,58 +79,9 @@ function draw() {
     
         
     initiateWorld();
-    sliderText();
-    directionText();
 
     left.drawSystem();
     right.drawSystem();
-    testBall.draw();
     middleBall.draw();
-    scoreSystem.draw();
 
-
-    checkLimit();
-    testBall.detectCollision();
-}
-
-function mouseDragged() {
-    if(left.control.isHovering(leftAngle) && left.state === 'START') 
-        left.control.mouseControl();
-    if(right.control.isHovering(rightAngle) && right.state === 'START')
-        right.control.mouseControl();
-
-    
-}
-
-function mousePressed() {
-    if(testBall.state === 'POSITION') {
-        testBall.x = (mouseX - centerX) / rX;
-        testBall.y = (mouseY - centerY) / rY;
-        // console.log((centerX - mouseX) * rX, (centerY - mouseY) * rY);
-    }
-}
-
-function mouseReleased() {
-
-    left.releaseAfterPull(leftAngle);
-    right.releaseAfterPull(rightAngle);
-
-    leftAngle = aMax;
-    rightAngle = -aMax;
-}
-
-function toggleWind() {
-    toggle = !toggle;
-    if(toggle) {
-        let vorzeichen = Math.random() < 0.5 ? -1 : 1;
-        air = Math.round(Math.random() * 21 * vorzeichen);
-    } else {
-        air = 0;
-    }
-}
-
-function keyTyped() {
-    if(keyCode === ENTER) {
-        testBall.stateChange();
-    }
 }
