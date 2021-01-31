@@ -12,7 +12,7 @@ function setVariable() {
     leftAngle = aMax;
     rightAngle = -aMax;
 
-    middleBall = new MiddleBall(d, m);
+    middleBall = new MiddleBall(d);
 
     left = new System('left');
     right = new System('right');

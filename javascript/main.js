@@ -18,18 +18,8 @@ var centerY;    //0 Punk des Kartesisches Systems in Y Achse
 var canvas;
 var canvasID = 'pTest'; // ist eine Variable!!!
 var resetButton;
-var windToggle;
-var toggle;
-var velocitySlider;
-var angleSlider;
 
-//==VARIABLES==
-var g;
-var luftDichte;
-var m;
-var cw;
-var air;
-var vMax;
+//==VARIABLES==//
 var d;
 var r;
 var distance;
@@ -98,9 +88,6 @@ function mouseDragged() {
 }
 
 function mouseReleased() {
-
-    left.releaseAfterPull(leftAngle);
-    right.releaseAfterPull(rightAngle);
 
     leftAngle = aMax;
     rightAngle = -aMax;
