@@ -68,12 +68,10 @@ function setup() {
     setVariable();
 
     resetButton = createButton('Start/Stop Game');
-    resetButton.position(100, 30);
 
     toggle = false;
 
     windToggle = createButton('Wind On/Off');
-    windToggle.position(100, 60);
     windToggle.mousePressed(toggleWind);
 }
 
@@ -85,11 +83,6 @@ function draw() {
     fill('#ff0000');
     
     //******* Berechnung der Bewegung und der Maßstäbe **** Hier wird in Metern gerechnet! **************************		  
-    
-    
-
-    testBall.draw();
-
     switch(gameState) {
         case 'START':
             startGame();
@@ -131,15 +124,13 @@ function mouseReleased() {
 function toggleWind() {
     toggle = !toggle;
     if(toggle) {
-        let vorzeichen = Math.random() < 0.5 ? -1 : 1;
-        air = Math.round(Math.random() * 21 * vorzeichen);
+        createWind();
     } else {
         air = 0;
     }
 }
 
-function keyTyped() {
-    if(keyCode === ENTER) {
-        testBall.stateChange();
-    }
+function createWind() {
+    let vorzeichen = Math.random() < 0.5 ? -1 : 1;
+    air = Math.round(Math.random() * 21 * vorzeichen);
 }

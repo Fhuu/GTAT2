@@ -62,6 +62,7 @@ class System{
     ballIsOnFloor() {
         if(this.ball.positionY + seesawHeight + seesawHalfLength * this.ball.ballPosition * Math.sin(aMax)  <= 0 
         && (this.state === 'FLY' || this.state === 'COLLISION')) {
+            if(toggle) createWind();
             this.state = 'ONFLOOR';
             this.vy = 0;
             this.ball.positionY = 0;

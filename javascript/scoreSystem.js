@@ -9,10 +9,10 @@ class ScoreSystem{
 
    draw() {
         push();
-            fill(color('#000000'));
+            fill(color('#ffffff'));
             textSize(36);
             textAlign(CENTER);
-            text(this.leftScore + ' : ' + this.rightScore, centerX, centerY - 50);
+            text(this.leftScore + ' : ' + this.rightScore, centerX, centerY + 600 * rY);
 
         pop();
    }
