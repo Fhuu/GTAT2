@@ -1,5 +1,7 @@
 function playGame() {
     
+    resetButton.mousePressed(resetAll);
+
     initiateWorld();
 
     left.drawSystem();
@@ -14,8 +16,9 @@ function playGame() {
 }
 
 function startGame() {
-    resetButton.position(100, 30);
     resetButton.mousePressed(() => {
+        scoreSystem.reset();
         gameState = 'PLAY';
+        move = Math.random() < 0.5 ? 'l' : 'r';
     })
 }

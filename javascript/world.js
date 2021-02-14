@@ -6,7 +6,8 @@ function initiateWorld() {
     makeText();
     ballState();
     scoreDetector();
-    // drawMovingTriangle();
+    drawMovingTriangle();
+    promptPlayer();
 }
 
 function drawFloor() {
@@ -107,12 +108,23 @@ function drawMovingTriangle() {
     if(pos > 15) vz = -250;
     else if(pos < 0) vz = 250;
     pos = pos + dt * vz;
-    console.log(pos); 
     push();
+        textAlign(CENTER);
+        noStroke();
+        textSize(14);
         translate(centerX, centerY);
         fill(color('#0000ff'));
+        text('hier', -445 * rX, (pos + 45) * rY);
         triangle(-445 * rX, (pos + 20) * rY, -460 * rX, (pos + 40) * rY, -430 * rX, (pos + 40) * rY);
         fill(color('#00ff00'));
+        text('hier', 445 * rX, (-pos + 60) * rY);
         triangle(445 * rX, (-pos + 35) * rY, 460 * rX, (-pos + 55) * rY, 430 * rX, (-pos + 55) * rY);
+    pop();
+}
+
+function promptPlayer(){
+    push();
+        translate(centerX, centerY);
+        move === 'l' ? text('PLAYLING', -600 * rX, 100 * rY) : text('PLAYING', 600 * rX, 100 * rY);
     pop();
 }

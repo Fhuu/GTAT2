@@ -24,6 +24,7 @@ var velocitySlider;
 var angleSlider;
 var pos;
 var vz;
+var move;
 
 //==VARIABLES==
 var gameState;
@@ -67,6 +68,13 @@ function setup() {
     setVariable();
 
     resetButton = createButton('Start/Stop Game');
+    resetButton.position(100, 30);
+
+    toggle = false;
+
+    windToggle = createButton('Wind On/Off');
+    windToggle.position(100, 60);
+    windToggle.mousePressed(toggleWind);
 }
 
 function draw() {
@@ -78,18 +86,7 @@ function draw() {
     
     //******* Berechnung der Bewegung und der Maßstäbe **** Hier wird in Metern gerechnet! **************************		  
     
-    resetButton.position(100, 30);
-    resetButton.mousePressed(resetAll);
-
-    toggle = false;
-
-    windToggle = createButton('Wind On/Off');
-    windToggle.position(100, 60);
-    windToggle.mousePressed(toggleWind);
-
-    sliders();
-    sliderText();
-    directionText();
+    
 
     testBall.draw();
 
@@ -106,9 +103,9 @@ function draw() {
 }
 
 function mouseDragged() {
-    if(left.control.isHovering(leftAngle) && left.state === 'START') 
+    if(left.control.isHovering(leftAngle) && move === 'l') 
         left.control.mouseControl();
-    if(right.control.isHovering(rightAngle) && right.state === 'START')
+    if(right.control.isHovering(rightAngle) && move === 'r')
         right.control.mouseControl();
 
     
@@ -118,17 +115,17 @@ function mousePressed() {
     if(testBall.state === 'POSITION') {
         testBall.x = (mouseX - centerX) / rX;
         testBall.y = (mouseY - centerY) / rY;
-        // console.log((centerX - mouseX) * rX, (centerY - mouseY) * rY);
     }
 }
 
 function mouseReleased() {
-
     left.releaseAfterPull(leftAngle);
     right.releaseAfterPull(rightAngle);
 
     leftAngle = aMax;
     rightAngle = -aMax;
+
+    
 }
 
 function toggleWind() {

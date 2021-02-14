@@ -27,6 +27,7 @@ class System{
                 break;
         }
 
+        this.flyConstraint();
         this.countFloorVelocity();
         this.ball.drawBall(this.state, this.vx, this.vy, this.t);
         this.control.drawControl();
@@ -45,6 +46,7 @@ class System{
             this.vx = v * Math.sin(aMax);
             this.vy = v * Math.cos(aMax);
             this.type === 'left' ? right.resetSystem() : left.resetSystem();
+            move = move === 'l' ? 'r' : 'l';
         }
     }
 
@@ -136,6 +138,21 @@ class System{
                 this.vx = this.vx - air - ((this.vx - air) * Math.sqrt(sq(this.vx) + sq(this.vy)) / (2 * tau)) * dt;
                 this.vy = this.vy - (this.vy * Math.sqrt(sq(vx_) + sq(this.vy)) / (2 * tau) + g) * dt;
             }
+        }
+    }
+    
+    flyConstraint() {
+        switch(this.type) {
+            case 'left' :
+                if(this.ball.positionX > distance - seesawHalfLength * Math.cos(aMax) && (this.state === 'FLY' || this.state === 'COLLISION')) {
+                    this.resetSystem();
+                }
+                break;
+            case 'right' :
+                if(this.ball.positionX < -distance + seesawHalfLength * Math.cos(aMax) && (this.state === 'FLY' || this.state === 'COLLISION')) {
+                    this.resetSystem();
+                }
+                break;
         }
     }
 
