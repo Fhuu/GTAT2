@@ -7,7 +7,7 @@ class MiddleBall {
         this.m = m;
         this.v = 0;
         this.angle = 0;
-        this.color = '#ff0000';
+        this.color = color(0,255,255);
         this.state = 'STOP';
     }
 
@@ -32,7 +32,7 @@ class MiddleBall {
         text('Middle STATE: ' + this.state, 700, 100);
         push();
         translate(centerX , centerY );
-        fill(color(this.color));
+        fill(this.color);
         circle(this.x * rX, this.y * rY, this.d * rY);
         pop();
     }
@@ -47,7 +47,7 @@ class MiddleBall {
         text('Middle STATE: ' + this.state, 700, 100);
         push();
             translate(centerX , centerY );
-            fill(color(this.color));
+            fill(this.color);
             circle(this.x * rX, this.y * rY, this.d * rY);
         pop();
     }

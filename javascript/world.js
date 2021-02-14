@@ -6,6 +6,7 @@ function initiateWorld() {
     makeText();
     ballState();
     scoreDetector();
+    // drawMovingTriangle();
 }
 
 function drawFloor() {
@@ -99,5 +100,19 @@ function scoreDetector() {
         line(-470 * rX, -16 * rY, -420 * rX, -16 * rY);
         line(470 * rX, -15 * rY, 420 * rX, -15 * rY);
         line(470 * rX, -16 * rY, 420 * rX, -16 * rY);
+    pop();
+}
+
+function drawMovingTriangle() {
+    if(pos > 15) vz = -250;
+    else if(pos < 0) vz = 250;
+    pos = pos + dt * vz;
+    console.log(pos); 
+    push();
+        translate(centerX, centerY);
+        fill(color('#0000ff'));
+        triangle(-445 * rX, (pos + 20) * rY, -460 * rX, (pos + 40) * rY, -430 * rX, (pos + 40) * rY);
+        fill(color('#00ff00'));
+        triangle(445 * rX, (-pos + 35) * rY, 460 * rX, (-pos + 55) * rY, 430 * rX, (-pos + 55) * rY);
     pop();
 }

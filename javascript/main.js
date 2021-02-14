@@ -22,8 +22,11 @@ var windToggle;
 var toggle;
 var velocitySlider;
 var angleSlider;
+var pos;
+var vz;
 
 //==VARIABLES==
+var gameState;
 var g;
 var luftDichte;
 var m;
@@ -63,17 +66,7 @@ function setup() {
     
     setVariable();
 
-    resetButton = createButton('Start/Reset');
-    resetButton.position(100, 30);
-    resetButton.mousePressed(resetAll);
-
-    toggle = false;
-
-    windToggle = createButton('Wind On/Off');
-    windToggle.position(100, 60);
-    windToggle.mousePressed(toggleWind);
-
-    sliders();
+    resetButton = createButton('Start/Stop Game');
 }
 
 function draw() {
@@ -85,20 +78,31 @@ function draw() {
     
     //******* Berechnung der Bewegung und der Maßstäbe **** Hier wird in Metern gerechnet! **************************		  
     
-        
-    initiateWorld();
+    resetButton.position(100, 30);
+    resetButton.mousePressed(resetAll);
+
+    toggle = false;
+
+    windToggle = createButton('Wind On/Off');
+    windToggle.position(100, 60);
+    windToggle.mousePressed(toggleWind);
+
+    sliders();
     sliderText();
     directionText();
 
-    left.drawSystem();
-    right.drawSystem();
     testBall.draw();
-    middleBall.draw();
-    scoreSystem.draw();
 
-
-    checkLimit();
-    testBall.detectCollision();
+    switch(gameState) {
+        case 'START':
+            startGame();
+            break;
+        case 'PLAY' :
+            playGame();
+            break;
+    }
+        
+   
 }
 
 function mouseDragged() {

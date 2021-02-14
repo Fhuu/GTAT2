@@ -1,6 +1,7 @@
 "use strict";
 
 function setVariable() {
+    gameState = 'START';
     //Einheit in mm
     g = 9800;
     luftDichte = 1.2041 / 1000000; //g/mm³ in 20°
@@ -26,6 +27,9 @@ function setVariable() {
     right = new System('right');
 
     scoreSystem = new ScoreSystem();
+
+    pos = 0;
+    vz = 500;
 }
 
 function resetAll() {
@@ -34,4 +38,5 @@ function resetAll() {
     left.resetSystem();
     right.resetSystem();
     scoreSystem.reset();
+    gameState = 'START';
 }
