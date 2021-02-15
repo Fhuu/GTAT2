@@ -7,7 +7,7 @@ class MiddleBall {
         this.m = m;
         this.v = 0;
         this.angle = 0;
-        this.color = '#ff0000';
+        this.color = color('#ff0000');
         this.state = 'STOP';
     }
 
@@ -26,28 +26,20 @@ class MiddleBall {
     }
 
     drawInitial() {
-        textSize(32);
-        fill(color('#000000'));
-        text('Middle VX: ' + Math.round(this.v), 700, 130);
-        text('Middle STATE: ' + this.state, 700, 100);
         push();
         translate(centerX , centerY );
-        fill(color(this.color));
+        fill(this.color);
         circle(this.x * rX, this.y * rY, this.d * rY);
         pop();
     }
     
     drawMove() {
         let vorzeichen = this.v < 0 ? -1 : 1; 
-        this.v = this.v - g * vorzeichen * Math.cos(0) * r * 7 * dt;
+        this.v = this.v - g * vorzeichen * Math.cos(0) * r * 12 * dt;
         this.x += this.v * dt;
-        textSize(32);
-        fill(color('#000000'));
-        text('Middle VX: ' + Math.round(this.v), 700, 130);
-        text('Middle STATE: ' + this.state, 700, 100);
         push();
             translate(centerX , centerY );
-            fill(color(this.color));
+            fill(this.color);
             circle(this.x * rX, this.y * rY, this.d * rY);
         pop();
     }
@@ -59,6 +51,8 @@ class MiddleBall {
             left.resetSystem();
             right.resetSystem();
             scoreSystem.leftWin();
+            move = 'r';
+            if(toggle) createWind();
         }   
 
         if(this.x < - 435) {
@@ -66,7 +60,11 @@ class MiddleBall {
             left.resetSystem();
             right.resetSystem();
             scoreSystem.rightWin();
+            move = 'l';
+            if(toggle) createWind();
         }
+
+        
     }
     
     moveBall() {
@@ -75,7 +73,7 @@ class MiddleBall {
 
     stopBall() {
         if(this.state === 'MOVE') {
-            if(this.v > -5 && this.v < 5) {
+            if(this.v >= -9 && this.v <= 9) {
                 this.state = 'STOP';
                 this.v = 0;
             }

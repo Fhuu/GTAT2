@@ -22,8 +22,12 @@ var windToggle;
 var toggle;
 var velocitySlider;
 var angleSlider;
+var pos;
+var vz;
+var move;
 
 //==VARIABLES==
+var gameState;
 var g;
 var luftDichte;
 var m;
@@ -63,17 +67,12 @@ function setup() {
     
     setVariable();
 
-    resetButton = createButton('Start/Reset');
-    resetButton.position(100, 30);
-    resetButton.mousePressed(resetAll);
+    resetButton = createButton('Start/Stop Game');
 
     toggle = false;
 
     windToggle = createButton('Wind On/Off');
-    windToggle.position(100, 60);
     windToggle.mousePressed(toggleWind);
-
-    sliders();
 }
 
 function draw() {
@@ -84,27 +83,22 @@ function draw() {
     fill('#ff0000');
     
     //******* Berechnung der Bewegung und der Maßstäbe **** Hier wird in Metern gerechnet! **************************		  
-    
+    switch(gameState) {
+        case 'START':
+            startGame();
+            break;
+        case 'PLAY' :
+            playGame();
+            break;
+    }
         
-    initiateWorld();
-    sliderText();
-    directionText();
-
-    left.drawSystem();
-    right.drawSystem();
-    testBall.draw();
-    middleBall.draw();
-    scoreSystem.draw();
-
-
-    checkLimit();
-    testBall.detectCollision();
+   
 }
 
 function mouseDragged() {
-    if(left.control.isHovering(leftAngle) && left.state === 'START') 
+    if(left.control.isHovering(leftAngle) && move === 'l') 
         left.control.mouseControl();
-    if(right.control.isHovering(rightAngle) && right.state === 'START')
+    if(right.control.isHovering(rightAngle) && move === 'r')
         right.control.mouseControl();
 
     
@@ -114,31 +108,29 @@ function mousePressed() {
     if(testBall.state === 'POSITION') {
         testBall.x = (mouseX - centerX) / rX;
         testBall.y = (mouseY - centerY) / rY;
-        // console.log((centerX - mouseX) * rX, (centerY - mouseY) * rY);
     }
 }
 
 function mouseReleased() {
-
     left.releaseAfterPull(leftAngle);
     right.releaseAfterPull(rightAngle);
 
     leftAngle = aMax;
     rightAngle = -aMax;
+
+    
 }
 
 function toggleWind() {
     toggle = !toggle;
     if(toggle) {
-        let vorzeichen = Math.random() < 0.5 ? -1 : 1;
-        air = Math.round(Math.random() * 21 * vorzeichen);
+        createWind();
     } else {
         air = 0;
     }
 }
 
-function keyTyped() {
-    if(keyCode === ENTER) {
-        testBall.stateChange();
-    }
+function createWind() {
+    let vorzeichen = Math.random() < 0.5 ? -1 : 1;
+    air = Math.round(Math.random() * 21 * vorzeichen);
 }
